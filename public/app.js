@@ -273,12 +273,17 @@ async function showCompleteResults() {
     // Generar resumen básico
     showBasicSummary();
     
-    // Generar análisis estadístico si está disponible
+    // Generar análisis estadístico si está disponible del servidor
     if (statisticalAnalysis) {
         showStatisticalAnalysis();
-        await generateDevelopmentChart();
-        generatePercentilesTable();
+    } else {
+        // Generar análisis local si no hay del servidor
+        showLocalStatisticalAnalysis();
     }
+    
+    // Siempre generar gráfico y tabla de percentiles
+    await generateDevelopmentChart();
+    generatePercentilesTable();
 }
 
 // Mostrar resumen básico
@@ -418,6 +423,176 @@ function showStatisticalAnalysis() {
     document.getElementById('analysis-content').innerHTML = analysisHtml;
 }
 
+// Generar análisis estadístico local cuando no hay del servidor
+function showLocalStatisticalAnalysis() {
+    if (!currentTest || !testResults.length) return;
+    
+    // Calcular estadísticas locales
+    const passed = testResults.filter(r => r.result === 'pass').length;
+    const partial = testResults.filter(r => r.result === 'partial').length;
+    const failed = testResults.filter(r => r.result === 'fail').length;
+    const total = testResults.length;
+    
+    // Análisis por área
+    const areaStats = {};
+    const allHitos = getAllHitos();
+    
+    // Inicializar estadísticas por área
+    for (let area in haizeaData) {
+        areaStats[area] = {
+            total: haizeaData[area].length,
+            evaluados: 0,
+            superados: 0,
+            parciales: 0,
+            fallidos: 0,
+            estado: 'normal'
+        };
+    }
+    
+    // Calcular estadísticas por área
+    testResults.forEach(result => {
+        const area = result.area;
+        if (areaStats[area]) {
+            areaStats[area].evaluados++;
+            if (result.result === 'pass') areaStats[area].superados++;
+            else if (result.result === 'partial') areaStats[area].parciales++;
+            else if (result.result === 'fail') areaStats[area].fallidos++;
+        }
+    });
+    
+    // Determinar estado por área
+    for (let area in areaStats) {
+        const stats = areaStats[area];
+        if (stats.evaluados > 0) {
+            const porcentajeSuperado = (stats.superados / stats.evaluados) * 100;
+            if (porcentajeSuperado < 60) {
+                stats.estado = 'preocupante';
+            } else if (porcentajeSuperado > 90) {
+                stats.estado = 'excelente';
+            } else if (porcentajeSuperado > 80) {
+                stats.estado = 'muy bueno';
+            }
+        }
+    }
+    
+    // Análisis de percentiles local
+    let normalCount = 0;
+    let retrasoCount = 0;
+    let avanzadoCount = 0;
+    
+    testResults.forEach(result => {
+        const edadPaciente = currentTest.patientAge;
+        const percentiles = result.percentiles;
+        
+        if (edadPaciente < percentiles.p25 && result.result === 'fail') {
+            retrasoCount++;
+        } else if (edadPaciente > percentiles.p90 && result.result === 'pass') {
+            avanzadoCount++;
+        } else {
+            normalCount++;
+        }
+    });
+    
+    // Generar HTML del análisis local
+    let analysisHtml = `
+        <div class="analysis-grid">
+            <div class="analysis-card">
+                <h4>📊 Distribución General</h4>
+                <div class="metric">
+                    <span>Hitos evaluados:</span>
+                    <span class="metric-value">${total}/${allHitos.length}</span>
+                </div>
+                <div class="metric">
+                    <span>Superados:</span>
+                    <span class="metric-value">${passed} (${Math.round((passed/total)*100)}%)</span>
+                </div>
+                <div class="metric">
+                    <span>Parciales:</span>
+                    <span class="metric-value">${partial} (${Math.round((partial/total)*100)}%)</span>
+                </div>
+                <div class="metric">
+                    <span>No superados:</span>
+                    <span class="metric-value">${failed} (${Math.round((failed/total)*100)}%)</span>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <h4>📈 Análisis de Percentiles</h4>
+                <div class="metric">
+                    <span>Desarrollo normal:</span>
+                    <span class="metric-value">${normalCount}</span>
+                </div>
+                <div class="metric">
+                    <span>Posibles retrasos:</span>
+                    <span class="metric-value">${retrasoCount}</span>
+                </div>
+                <div class="metric">
+                    <span>Desarrollo avanzado:</span>
+                    <span class="metric-value">${avanzadoCount}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-grid">
+    `;
+    
+    // Análisis por área
+    for (let area in areaStats) {
+        const stats = areaStats[area];
+        const porcentaje = stats.evaluados > 0 ? Math.round((stats.superados / stats.evaluados) * 100) : 0;
+        
+        analysisHtml += `
+            <div class="analysis-card">
+                <h4>🎯 ${getAreaDisplayName(area)}</h4>
+                <div class="metric">
+                    <span>Evaluados:</span>
+                    <span class="metric-value">${stats.evaluados}/${stats.total}</span>
+                </div>
+                <div class="metric">
+                    <span>Superados:</span>
+                    <span class="metric-value">${stats.superados} (${porcentaje}%)</span>
+                </div>
+                <div class="metric">
+                    <span>Parciales:</span>
+                    <span class="metric-value">${stats.parciales}</span>
+                </div>
+                <div class="metric">
+                    <span>Estado:</span>
+                    <span class="metric-value ${stats.estado}">${stats.estado}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    analysisHtml += `</div>`;
+    
+    // Recomendaciones locales
+    const recomendaciones = [];
+    if (retrasoCount > 2) {
+        recomendaciones.push('Se recomienda seguimiento especializado debido a posibles retrasos');
+        recomendaciones.push('Considerar estimulación temprana en las áreas afectadas');
+    }
+    if (avanzadoCount > 3) {
+        recomendaciones.push('Desarrollo avanzado - considerar enriquecimiento educativo');
+    }
+    if ((passed / total) < 0.6) {
+        recomendaciones.push('Puntuación general baja - evaluación más detallada recomendada');
+    }
+    
+    if (recomendaciones.length > 0) {
+        analysisHtml += `
+            <div class="recommendations-section">
+                <h4>💡 Recomendaciones</h4>
+        `;
+        recomendaciones.forEach(recomendacion => {
+            analysisHtml += `<div class="recommendation-item">${recomendacion}</div>`;
+        });
+        analysisHtml += `</div>`;
+    }
+    
+    document.getElementById('analysis-content').innerHTML = analysisHtml;
+}
+
 // Generar gráfico de desarrollo
 async function generateDevelopmentChart() {
     try {
@@ -546,7 +721,18 @@ async function updateChart() {
 
 // Generar tabla de percentiles
 function generatePercentilesTable() {
+    const percentilesContainer = document.getElementById('percentiles-table');
+    
+    if (!currentTest || !testResults || testResults.length === 0) {
+        percentilesContainer.innerHTML = '<p class="no-data">No hay resultados para mostrar en la tabla de percentiles.</p>';
+        return;
+    }
+    
     let tableHtml = `
+        <div class="percentiles-summary">
+            <h4>📊 Análisis de Percentiles por Hito</h4>
+            <p>Esta tabla muestra cómo se compara la edad de tu paciente (${currentTest.patientAge} meses) con los percentiles normales de cada hito evaluado.</p>
+        </div>
         <table class="percentiles-table">
             <thead>
                 <tr>
@@ -557,7 +743,7 @@ function generatePercentilesTable() {
                     <th>P50</th>
                     <th>P75</th>
                     <th>P90</th>
-                    <th>Estado</th>
+                    <th>Estado del Paciente</th>
                 </tr>
             </thead>
             <tbody>
@@ -567,29 +753,68 @@ function generatePercentilesTable() {
         const p = result.percentiles;
         const edadPaciente = currentTest.patientAge;
         
+        if (!p) {
+            console.warn('Percentiles no disponibles para hito:', result.hitoItem);
+            return;
+        }
+        
         let estado = 'normal';
         let estadoTexto = 'Normal';
+        let estadoDetalle = '';
         
         if (edadPaciente < p.p25) {
-            estado = result.result === 'fail' ? 'danger' : 'advanced';
-            estadoTexto = result.result === 'fail' ? 'Posible retraso' : 'Precoz';
-        } else if (edadPaciente > p.p90) {
-            estado = result.result === 'pass' ? 'advanced' : 'warning';
-            estadoTexto = result.result === 'pass' ? 'Avanzado' : 'Tardío';
+            if (result.result === 'fail') {
+                estado = 'danger';
+                estadoTexto = 'Posible retraso';
+                estadoDetalle = 'No logrado y edad por debajo del P25';
+            } else {
+                estado = 'advanced';
+                estadoTexto = 'Precoz';
+                estadoDetalle = 'Logrado antes del P25';
+            }
+        } else if (edadPaciente >= p.p25 && edadPaciente < p.p50) {
+            estadoTexto = 'Normal bajo';
+            estadoDetalle = 'Entre P25 y P50';
+        } else if (edadPaciente >= p.p50 && edadPaciente < p.p75) {
+            estadoTexto = 'Normal';
+            estadoDetalle = 'Entre P50 y P75';
+        } else if (edadPaciente >= p.p75 && edadPaciente < p.p90) {
+            estadoTexto = 'Normal alto';
+            estadoDetalle = 'Entre P75 y P90';
+        } else if (edadPaciente >= p.p90) {
+            if (result.result === 'pass') {
+                estado = 'advanced';
+                estadoTexto = 'Dentro de rango';
+                estadoDetalle = 'Logrado en edad esperada alta';
+            } else {
+                estado = 'warning';
+                estadoTexto = 'Tardío';
+                estadoDetalle = 'No logrado después del P90';
+            }
         }
         
         const resultIcon = result.result === 'pass' ? '✅' : result.result === 'partial' ? '⚠️' : '❌';
+        const resultText = result.result === 'pass' ? 'Superado' : result.result === 'partial' ? 'Parcial' : 'No superado';
         
         tableHtml += `
-            <tr>
-                <td>${result.hitoItem}</td>
-                <td>${getAreaDisplayName(result.area)}</td>
-                <td>${resultIcon}</td>
-                <td>${p.p25}m</td>
-                <td>${p.p50}m</td>
-                <td>${p.p75}m</td>
-                <td>${p.p90}m</td>
-                <td><span class="percentil-status ${estado}">${estadoTexto}</span></td>
+            <tr class="hito-row ${estado}">
+                <td class="hito-name" title="${result.hitoItem}">
+                    ${result.hitoItem.length > 40 ? result.hitoItem.substring(0, 37) + '...' : result.hitoItem}
+                </td>
+                <td class="area-name">${getAreaDisplayName(result.area)}</td>
+                <td class="result-cell">
+                    <span class="result-icon">${resultIcon}</span>
+                    <span class="result-text">${resultText}</span>
+                </td>
+                <td class="percentile-cell">${p.p25}m</td>
+                <td class="percentile-cell">${p.p50}m</td>
+                <td class="percentile-cell">${p.p75}m</td>
+                <td class="percentile-cell">${p.p90}m</td>
+                <td class="status-cell">
+                    <span class="percentil-status ${estado}" title="${estadoDetalle}">
+                        ${estadoTexto}
+                    </span>
+                </td>
             </tr>
         `;
     });
@@ -597,9 +822,32 @@ function generatePercentilesTable() {
     tableHtml += `
             </tbody>
         </table>
+        
+        <div class="percentiles-legend">
+            <h5>📖 Interpretación de Estados:</h5>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <span class="percentil-status advanced">Precoz/Avanzado</span>
+                    <span>Hito logrado antes o después del tiempo esperado de forma positiva</span>
+                </div>
+                <div class="legend-item">
+                    <span class="percentil-status normal">Normal</span>
+                    <span>Hito en rango de desarrollo típico</span>
+                </div>
+                <div class="legend-item">
+                    <span class="percentil-status warning">Tardío</span>
+                    <span>Hito no logrado en el tiempo esperado</span>
+                </div>
+                <div class="legend-item">
+                    <span class="percentil-status danger">Posible retraso</span>
+                    <span>Requiere atención y posible seguimiento</span>
+                </div>
+            </div>
+        </div>
     `;
     
-    document.getElementById('percentiles-table').innerHTML = tableHtml;
+    percentilesContainer.innerHTML = tableHtml;
+    console.log('✅ Tabla de percentiles generada con', testResults.length, 'hitos');
 }
 
 // Gestión de pestañas de resultados
@@ -614,18 +862,41 @@ function showResultTab(tabName) {
     });
     
     // Mostrar pestaña seleccionada
-    document.getElementById(tabName + '-tab').classList.add('active');
-    document.querySelector(`[onclick="showResultTab('${tabName}')"]`).classList.add('active');
+    const targetTab = document.getElementById(tabName + '-tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
     
-    // Si es la tabla de Haizea-Llevant, generarla
-    if (tabName === 'haizea-table') {
+    const targetButton = document.querySelector(`[onclick="showResultTab('${tabName}')"]`);
+    if (targetButton) {
+        targetButton.classList.add('active');
+    }
+    
+    // Generar contenido específico según la pestaña
+    if (tabName === 'statistics') {
+        // Asegurar que se muestren las estadísticas
+        if (statisticalAnalysis) {
+            showStatisticalAnalysis();
+        } else {
+            showLocalStatisticalAnalysis();
+        }
+    } else if (tabName === 'percentiles') {
+        // Asegurar que se muestre la tabla de percentiles
+        generatePercentilesTable();
+    } else if (tabName === 'charts') {
+        // Asegurar que se muestre el gráfico
+        if (currentTest) {
+            generateDevelopmentChart();
+        }
+    } else if (tabName === 'haizea-table') {
         generateHaizeaTable();
+    } else if (tabName === 'haizea-official') {
+        generateOfficialTable();
+    } else if (tabName === 'haizea-graphic') {
+        generateGraphicChart();
     }
     
-    // Si es la tabla oficial, inicializarla
-    if (tabName === 'haizea-official') {
-        generateOfficialTable();
-    }
+    console.log(`Pestaña '${tabName}' activada`);
 }
 
 // Descargar resultados en PDF (función placeholder)
@@ -1324,4 +1595,261 @@ window.addEventListener('resize', () => {
     if (document.getElementById('haizea-official-tab').classList.contains('active')) {
         setTimeout(initializeOfficialTable, 100);
     }
+    if (document.getElementById('haizea-graphic-tab').classList.contains('active')) {
+        setTimeout(initializeGraphicChart, 100);
+    }
 });
+
+// Variables para la tabla gráfica original
+let graphicChartScale = 1;
+let graphicImageWidth = 0;
+let graphicImageHeight = 0;
+let graphicChartConfig = null;
+
+// Cargar configuración de la tabla gráfica
+async function loadGraphicChartConfig() {
+    try {
+        const response = await fetch('haizea_chart_config.json');
+        graphicChartConfig = await response.json();
+        console.log('✅ Configuración de gráfica original cargada');
+        return true;
+    } catch (error) {
+        console.error('❌ Error cargando configuración de gráfica:', error);
+        return false;
+    }
+}
+
+// Generar tabla gráfica original
+async function generateGraphicChart() {
+    if (!currentTest) {
+        console.log('No hay test actual para mostrar en gráfica original');
+        return;
+    }
+    
+    // Cargar configuración si no está cargada
+    if (!graphicChartConfig) {
+        const loaded = await loadGraphicChartConfig();
+        if (!loaded) {
+            showNotification('Error cargando configuración de gráfica', 'error');
+            return;
+        }
+    }
+    
+    const patientAge = currentTest.patientAge;
+    const patientName = currentTest.patientName;
+    
+    // Actualizar información del paciente
+    document.getElementById('graphic-patient-name').textContent = patientName;
+    document.getElementById('graphic-patient-age').textContent = patientAge;
+    
+    console.log(`Generando gráfica original para: ${patientName} (${patientAge} meses)`);
+}
+
+// Inicializar gráfica cuando la imagen se carga
+function initializeGraphicChart() {
+    const img = document.getElementById('haizea-graphic-img');
+    if (!img.complete) return;
+    
+    graphicImageWidth = img.clientWidth;
+    graphicImageHeight = img.clientHeight;
+    
+    console.log(`Imagen gráfica cargada: ${graphicImageWidth}x${graphicImageHeight}px`);
+    
+    if (currentTest) {
+        updateGraphicAgeLinePosition(currentTest.patientAge);
+        renderGraphicHitoMarkers();
+    }
+}
+
+// Actualizar posición de la línea de edad en la gráfica
+function updateGraphicAgeLinePosition(ageInMonths) {
+    const ageLine = document.getElementById('age-line-graphic-vertical');
+    const ageLabel = document.getElementById('age-label-graphic-marker');
+    const ageText = document.getElementById('age-marker-graphic-text');
+    
+    if (!ageLine || !ageLabel || !graphicChartConfig) return;
+    
+    // Calcular posición basada en la escala de meses
+    const position = calculateGraphicAgePosition(ageInMonths);
+    const positionPercent = position * 100;
+    
+    // Actualizar posición de línea y etiqueta
+    ageLine.style.left = `${positionPercent}%`;
+    ageLabel.style.left = `${positionPercent}%`;
+    ageText.textContent = `${ageInMonths}m`;
+    
+    console.log(`Línea de edad gráfica posicionada en ${positionPercent.toFixed(1)}% para ${ageInMonths} meses`);
+}
+
+// Calcular posición en la gráfica basada en la edad
+function calculateGraphicAgePosition(ageInMonths) {
+    if (!graphicChartConfig || !graphicChartConfig.month_scale) {
+        console.warn('Configuración de gráfica no disponible, usando fallback');
+        return 0.5;
+    }
+    
+    const monthScale = graphicChartConfig.month_scale;
+    const positions = monthScale.positions;
+    
+    // Si la edad está fuera del rango, usar los extremos
+    if (ageInMonths <= positions[0].month) {
+        return positions[0].percentage / 100;
+    }
+    if (ageInMonths >= positions[positions.length - 1].month) {
+        return positions[positions.length - 1].percentage / 100;
+    }
+    
+    // Encontrar el rango donde está la edad
+    for (let i = 0; i < positions.length - 1; i++) {
+        const lowerPos = positions[i];
+        const upperPos = positions[i + 1];
+        
+        if (ageInMonths >= lowerPos.month && ageInMonths <= upperPos.month) {
+            // Interpolación lineal
+            const ratio = (ageInMonths - lowerPos.month) / (upperPos.month - lowerPos.month);
+            const lowerPercent = lowerPos.percentage / 100;
+            const upperPercent = upperPos.percentage / 100;
+            return lowerPercent + ratio * (upperPercent - lowerPercent);
+        }
+    }
+    
+    return 0.5; // Fallback al centro
+}
+
+// Renderizar marcadores de hitos sobre la gráfica
+function renderGraphicHitoMarkers() {
+    const overlay = document.getElementById('hitos-graphic-overlay');
+    if (!overlay || !testResults || !graphicChartConfig) {
+        console.log('No se pueden renderizar marcadores gráficos: faltan datos');
+        return;
+    }
+    
+    // Limpiar marcadores existentes
+    overlay.innerHTML = '';
+    
+    const areas = graphicChartConfig.areas;
+    let markersCreated = 0;
+    
+    testResults.forEach((result, index) => {
+        const position = calculateGraphicHitoPosition(result);
+        if (position) {
+            const marker = createGraphicHitoMarker(result, position);
+            overlay.appendChild(marker);
+            markersCreated++;
+        }
+    });
+    
+    console.log(`✅ Renderizados ${markersCreated} marcadores gráficos de hitos`);
+}
+
+// Calcular posición gráfica de un hito
+function calculateGraphicHitoPosition(result) {
+    if (!graphicChartConfig || !result.percentiles) return null;
+    
+    const areas = graphicChartConfig.areas;
+    const areaConfig = areas[result.area];
+    
+    if (!areaConfig) return null;
+    
+    // Posición X basada en el percentil p50 del hito
+    const xPosition = calculateGraphicAgePosition(result.percentiles.p50);
+    
+    // Posición Y basada en el área (centro del área)
+    const yStart = areaConfig.y_start_percent / 100;
+    const yEnd = areaConfig.y_end_percent / 100;
+    const yPosition = (yStart + yEnd) / 2;
+    
+    return {
+        x: xPosition,
+        y: yPosition,
+        expectedAge: result.percentiles.p50
+    };
+}
+
+// Crear marcador visual para un hito en la gráfica
+function createGraphicHitoMarker(result, position) {
+    const marker = document.createElement('div');
+    marker.className = `hito-marker-graphic ${result.result}`;
+    marker.style.left = `${position.x * 100}%`;
+    marker.style.top = `${position.y * 100}%`;
+    
+    // Tooltip con información del hito
+    const tooltip = document.createElement('div');
+    tooltip.className = 'hito-tooltip';
+    tooltip.innerHTML = `
+        <strong>${result.hitoItem}</strong><br>
+        Resultado: ${getResultText(result.result)}<br>
+        Área: ${getAreaDisplayName(result.area)}<br>
+        P50: ${position.expectedAge} meses<br>
+        Paciente: ${currentTest.patientAge} meses
+    `;
+    marker.appendChild(tooltip);
+    
+    // Eventos para interactividad
+    marker.addEventListener('click', () => {
+        showGraphicHitoDetails(result, position);
+    });
+    
+    return marker;
+}
+
+// Mostrar detalles de un hito en la gráfica
+function showGraphicHitoDetails(result, position) {
+    const patientStatus = getPatientDevelopmentStatus(result, currentTest.patientAge);
+    
+    const message = `
+🎯 HITO: ${result.hitoItem}
+
+📊 RESULTADO: ${getResultText(result.result)}
+📋 ÁREA: ${getAreaDisplayName(result.area)}
+
+📈 PERCENTILES:
+• P25: ${result.percentiles.p25} meses
+• P50: ${result.percentiles.p50} meses
+• P75: ${result.percentiles.p75} meses
+• P90: ${result.percentiles.p90} meses
+
+👶 PACIENTE: ${currentTest.patientAge} meses
+📊 ESTADO: ${patientStatus.description}
+
+${result.result === 'pass' ? '✅ Hito superado correctamente' :
+  result.result === 'partial' ? '⚠️ Hito parcialmente logrado' :
+  '❌ Hito no superado - considerar seguimiento'}
+    `.trim();
+    
+    alert(message);
+}
+
+// Funciones de zoom para gráfica
+function zoomGraphicChart(factor) {
+    graphicChartScale *= factor;
+    graphicChartScale = Math.max(0.5, Math.min(3, graphicChartScale)); // Límites de zoom
+    
+    const img = document.getElementById('haizea-graphic-img');
+    img.style.transform = `scale(${graphicChartScale})`;
+    
+    updateGraphicZoomDisplay();
+}
+
+function resetZoomGraphicChart() {
+    graphicChartScale = 1;
+    const img = document.getElementById('haizea-graphic-img');
+    img.style.transform = 'scale(1)';
+    updateGraphicZoomDisplay();
+}
+
+function updateGraphicZoomDisplay() {
+    document.getElementById('graphic-zoom-level').textContent = `${Math.round(graphicChartScale * 100)}%`;
+}
+
+// Actualizar función showResultTab para incluir la nueva pestaña gráfica
+const originalShowResultTab = showResultTab;
+showResultTab = function(tabName) {
+    // Llamar a la función original
+    originalShowResultTab(tabName);
+    
+    // Si es la gráfica original, inicializarla
+    if (tabName === 'haizea-graphic') {
+        generateGraphicChart();
+    }
+};

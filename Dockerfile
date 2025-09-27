@@ -6,6 +6,9 @@ LABEL maintainer="NeuropediaLab"
 LABEL description="Test Haizea-Llevant digitalizado para Raspberry Pi 5"
 LABEL version="1.0.0"
 
+# Instalar herramientas necesarias
+RUN apk add --no-cache wget
+
 # Crear directorio de trabajo
 WORKDIR /app
 
@@ -21,6 +24,12 @@ RUN addgroup -g 1001 -S nodejs && \
 
 # Copiar código fuente
 COPY . .
+
+# Hacer el script de inicio ejecutable
+RUN chmod +x start.sh
+
+# Crear directorio de datos con permisos correctos
+RUN mkdir -p /app/data /app/logs /tmp/haizea-data
 
 # Cambiar propietario de archivos
 RUN chown -R nodejs:nodejs /app
@@ -40,4 +49,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Comando de inicio
-CMD ["node", "server.js"]
+CMD ["./start.sh"]

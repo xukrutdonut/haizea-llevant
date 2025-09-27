@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  haizea-llevant:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: haizea-llevant:latest
+    container_name: haizea-llevant-app
+    restart: unless-stopped
+    
+    # Configuración de puertos
+    ports:
+      - "3000:3000"
+    
+    # Variables de entorno
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TZ=Europe/Madrid
+    
+    # Límites de recursos reducidos para mejor compatibilidad
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    
+    # Volúmenes para persistir datos usando volumen nombrado
+    volumes:
+      - haizea_app_data:/app/data
+      - haizea_app_logs:/app/logs
+    
+    # Configuración de salud mejorada
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Configuración de logging optimizada
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Volúmenes persistentes
+volumes:
+  haizea_app_data:
+    driver: local
+  haizea_app_logs:
+    driver: local

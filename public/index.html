@@ -21,7 +21,7 @@
                     <span class="stat-value" id="hitos-count">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Percentil:</span>
+                    <span class="stat-label">% de hitos superados:</span>
                     <span class="stat-value" id="percentil-info">-</span>
                 </div>
             </div>
@@ -99,6 +99,7 @@
                         <button class="tab-button" onclick="showResultTab('statistics')">📊 Estadísticas</button>
                         <button class="tab-button" onclick="showResultTab('charts')">📈 Gráficos</button>
                         <button class="tab-button" onclick="showResultTab('percentiles')">📉 Percentiles</button>
+                        <button class="tab-button" onclick="showResultTab('haizea-graphic')">📊 Gráfica Original</button>
                         <button class="tab-button" onclick="showResultTab('haizea-table')">📋 Tabla Visual</button>
                         <button class="tab-button" onclick="showResultTab('haizea-official')">📋 Tabla Oficial</button>
                     </div>
@@ -140,6 +141,79 @@
                     <div id="percentiles-tab" class="result-tab-content">
                         <h3>📉 Análisis de Percentiles por Hito</h3>
                         <div id="percentiles-table"></div>
+                    </div>
+
+                    <div id="haizea-graphic-tab" class="result-tab-content">
+                        <h3>📊 Tabla Gráfica Haizea-Llevant - Representación Visual</h3>
+                        <div class="graphic-chart-controls">
+                            <div class="patient-age-info">
+                                <span class="age-label">👶 Paciente:</span>
+                                <span class="age-value" id="graphic-patient-name">-</span>
+                                <span class="age-separator">|</span>
+                                <span class="age-label">📅 Edad:</span>
+                                <span class="age-value" id="graphic-patient-age">-</span>
+                                <span class="age-unit">meses</span>
+                            </div>
+                            <div class="chart-zoom-controls">
+                                <button class="btn-zoom" onclick="zoomGraphicChart(0.8)">🔍-</button>
+                                <span id="graphic-zoom-level">100%</span>
+                                <button class="btn-zoom" onclick="zoomGraphicChart(1.2)">🔍+</button>
+                                <button class="btn-zoom" onclick="resetZoomGraphicChart()">↺ Reset</button>
+                            </div>
+                        </div>
+                        
+                        <div class="graphic-legend">
+                            <div class="legend-row">
+                                <div class="legend-item">
+                                    <div class="legend-line graphic-age-line"></div>
+                                    <span>Edad cronológica del paciente</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-point graphic-hito-passed"></div>
+                                    <span>Hito superado</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-point graphic-hito-partial"></div>
+                                    <span>Hito parcial</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-point graphic-hito-failed"></div>
+                                    <span>Hito no superado</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="graphic-chart-container" id="graphic-chart-container">
+                            <div class="graphic-chart-wrapper" id="graphic-chart-wrapper">
+                                <!-- Línea de edad cronológica -->
+                                <div class="age-line-graphic-container" id="age-line-graphic-container">
+                                    <div class="age-line-graphic-vertical" id="age-line-graphic-vertical"></div>
+                                    <div class="age-label-graphic-marker" id="age-label-graphic-marker">
+                                        <span id="age-marker-graphic-text">12m</span>
+                                    </div>
+                                </div>
+                                <!-- Imagen de la tabla gráfica -->
+                                <img id="haizea-graphic-img" 
+                                     src="tabla_haizea_grafica_horizontal.png" 
+                                     alt="Tabla Gráfica Haizea-Llevant"
+                                     onload="initializeGraphicChart()" 
+                                     draggable="false">
+                                <!-- Overlay para puntos de hitos evaluados -->
+                                <div class="hitos-graphic-overlay" id="hitos-graphic-overlay"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="graphic-instructions">
+                            <h4>📖 Cómo interpretar la gráfica original:</h4>
+                            <ul>
+                                <li><strong>Línea roja vertical:</strong> Marca la edad cronológica de tu paciente</li>
+                                <li><strong>Eje horizontal:</strong> Representa la edad en meses (0-72 meses)</li>
+                                <li><strong>Eje vertical:</strong> Muestra las diferentes áreas de desarrollo</li>
+                                <li><strong>Curvas de percentiles:</strong> Las líneas curvas muestran el desarrollo típico (P25, P50, P75, P90)</li>
+                                <li><strong>Puntos coloreados:</strong> Representan los hitos evaluados del paciente superpuestos en la gráfica</li>
+                                <li><strong>Zoom:</strong> Utiliza los controles para acercarte y ver detalles específicos</li>
+                            </ul>
+                        </div>
                     </div>
 
                     <div id="haizea-table-tab" class="result-tab-content">

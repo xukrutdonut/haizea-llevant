@@ -1,0 +1,117 @@
+{
+  "image_path": "tabla_haizea_grafica_horizontal.png",
+  "original_dimensions": {
+    "width": 2835,
+    "height": 1949
+  },
+  "month_scale": {
+    "range": [
+      0,
+      72
+    ],
+    "positions": [
+      {
+        "month": 0,
+        "x_position": 284,
+        "percentage": 10.0
+      },
+      {
+        "month": 6,
+        "x_position": 472,
+        "percentage": 16.67
+      },
+      {
+        "month": 12,
+        "x_position": 662,
+        "percentage": 23.33
+      },
+      {
+        "month": 18,
+        "x_position": 850,
+        "percentage": 30.0
+      },
+      {
+        "month": 24,
+        "x_position": 1040,
+        "percentage": 36.67
+      },
+      {
+        "month": 30,
+        "x_position": 1228,
+        "percentage": 43.33
+      },
+      {
+        "month": 36,
+        "x_position": 1418,
+        "percentage": 50.0
+      },
+      {
+        "month": 42,
+        "x_position": 1606,
+        "percentage": 56.67
+      },
+      {
+        "month": 48,
+        "x_position": 1796,
+        "percentage": 63.33
+      },
+      {
+        "month": 54,
+        "x_position": 1984,
+        "percentage": 70.0
+      },
+      {
+        "month": 60,
+        "x_position": 2174,
+        "percentage": 76.67
+      },
+      {
+        "month": 66,
+        "x_position": 2362,
+        "percentage": 83.33
+      },
+      {
+        "month": 72,
+        "x_position": 2552,
+        "percentage": 90.0
+      }
+    ],
+    "usable_width_percent": 80,
+    "margin_left_percent": 10
+  },
+  "areas": {
+    "socializacion": {
+      "y_start_percent": 10,
+      "y_end_percent": 25
+    },
+    "lenguaje": {
+      "y_start_percent": 25,
+      "y_end_percent": 40
+    },
+    "motricidad_gruesa": {
+      "y_start_percent": 40,
+      "y_end_percent": 55
+    },
+    "motricidad_fina": {
+      "y_start_percent": 55,
+      "y_end_percent": 70
+    },
+    "resolucion_problemas": {
+      "y_start_percent": 70,
+      "y_end_percent": 85
+    }
+  },
+  "legend": {
+    "patient_age_line": {
+      "color": "#FF0000",
+      "width": 3,
+      "style": "solid"
+    },
+    "percentile_bands": {
+      "p25": "#FFE6E6",
+      "p50": "#FFB3B3",
+      "p75": "#FF8080",
+      "p90": "#FF4D4D"
+    }
+  }
+}

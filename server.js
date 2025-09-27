@@ -138,21 +138,41 @@ app.post('/api/test/result', (req, res) => {
         };
         
         // Crear directorio data si no existe
-        if (!fs.existsSync('./data')) {
-            fs.mkdirSync('./data', { recursive: true });
+        let dataDir = './data';
+        if (!fs.existsSync(dataDir)) {
+            try {
+                fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 });
+                console.log('✅ Directorio data creado:', dataDir);
+            } catch (mkdirError) {
+                console.error('❌ Error creando directorio data:', mkdirError);
+                // Intentar con directorio temporal si falla
+                const tempDir = '/tmp/haizea-data';
+                if (!fs.existsSync(tempDir)) {
+                    fs.mkdirSync(tempDir, { recursive: true });
+                }
+                dataDir = tempDir;
+                console.log('📁 Usando directorio temporal:', tempDir);
+            }
         }
         
         // Guardar resultado
-        const filename = `./data/test-${testId}-${Date.now()}.json`;
-        fs.writeFileSync(filename, JSON.stringify(completeResult, null, 2));
-        
-        console.log('Resultados guardados con análisis:', filename);
+        let filename = null;
+        try {
+            filename = `${dataDir}/test-${testId}-${Date.now()}.json`;
+            fs.writeFileSync(filename, JSON.stringify(completeResult, null, 2));
+            console.log('✅ Resultados guardados con análisis:', filename);
+        } catch (writeError) {
+            console.error('❌ Error escribiendo archivo:', writeError);
+            // En caso de error, al menos devolver el análisis sin guardar archivo
+            console.log('⚠️ Continuando sin guardar archivo local');
+            filename = null;
+        }
         
         res.json({ 
             message: 'Resultados guardados con análisis estadístico',
             testId,
             analysis,
-            filename,
+            filename: filename || 'No guardado localmente',
             timestamp: new Date().toISOString()
         });
         

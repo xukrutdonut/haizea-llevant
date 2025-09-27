@@ -24,9 +24,9 @@ services:
     mem_reservation: 256m
     cpus: 2.0
     
-    # Volúmenes para persistir datos
+    # Volúmenes para persistir datos con permisos correctos
     volumes:
-      - ./data:/app/data
+      - haizea-data:/app/data
       - ./logs:/app/logs
     
     # Red personalizada
