@@ -3,14 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Haizea-Llevant Digitalizado</title>
+    <title>Test Haizea-Llevant Digitalizado - Análisis Estadístico</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Librería para exportar gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🧠 Test Haizea-Llevant Digitalizado</h1>
-            <p class="subtitle">Evaluación neurológica pediátrica</p>
+            <p class="subtitle">Evaluación neurológica pediátrica con análisis estadístico</p>
+            <div class="stats-header" id="stats-header" style="display: none;">
+                <div class="stat-item">
+                    <span class="stat-label">Hitos Evaluados:</span>
+                    <span class="stat-value" id="hitos-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Percentil:</span>
+                    <span class="stat-value" id="percentil-info">-</span>
+                </div>
+            </div>
         </header>
 
         <main>
@@ -61,9 +75,53 @@
             <div id="results-screen" class="screen">
                 <div class="card">
                     <h2>📊 Resultados de la Evaluación</h2>
-                    <div id="results-summary"></div>
-                    <button class="btn-primary" onclick="newTest()">Nueva Evaluación</button>
-                    <button class="btn-secondary" onclick="downloadResults()">Descargar Resultados</button>
+                    
+                    <!-- Navegación por pestañas en resultados -->
+                    <div class="results-tabs">
+                        <button class="tab-button active" onclick="showResultTab('summary')">📋 Resumen</button>
+                        <button class="tab-button" onclick="showResultTab('statistics')">📊 Estadísticas</button>
+                        <button class="tab-button" onclick="showResultTab('charts')">📈 Gráficos</button>
+                        <button class="tab-button" onclick="showResultTab('percentiles')">📉 Percentiles</button>
+                    </div>
+
+                    <!-- Contenido de pestañas -->
+                    <div id="summary-tab" class="result-tab-content active">
+                        <div id="results-summary"></div>
+                        <div class="result-actions">
+                            <button class="btn-primary" onclick="newTest()">Nueva Evaluación</button>
+                            <button class="btn-secondary" onclick="downloadResults()">Descargar JSON</button>
+                            <button class="btn-secondary" onclick="downloadPDF()">Descargar PDF</button>
+                        </div>
+                    </div>
+
+                    <div id="statistics-tab" class="result-tab-content">
+                        <div id="statistical-analysis">
+                            <h3>📈 Análisis Estadístico Detallado</h3>
+                            <div id="analysis-content"></div>
+                        </div>
+                    </div>
+
+                    <div id="charts-tab" class="result-tab-content">
+                        <h3>📊 Representación Gráfica del Desarrollo</h3>
+                        <div class="chart-controls">
+                            <select id="chart-area-filter" onchange="updateChart()">
+                                <option value="all">Todas las áreas</option>
+                                <option value="socializacion">Socialización</option>
+                                <option value="lenguaje">Lenguaje</option>
+                                <option value="motricidad_gruesa">Motricidad Gruesa</option>
+                                <option value="motricidad_fina">Motricidad Fina</option>
+                                <option value="resolucion_problemas">Resolución de Problemas</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="development-chart" width="800" height="400"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="percentiles-tab" class="result-tab-content">
+                        <h3>📉 Análisis de Percentiles por Hito</h3>
+                        <div id="percentiles-table"></div>
+                    </div>
                 </div>
             </div>
         </main>
