@@ -1,33 +1,74 @@
-# 🧠 Haizea-Llevant Test Digitalizado
+# 🧠 Haizea-Llevant Test Digitalizado - Análisis Estadístico Completo
 
-> **Aplicación web profesional para evaluaciones neurológicas pediátricas basadas en el test Haizea-Llevant, optimizada para Raspberry Pi 5**
+> **Aplicación web profesional para evaluaciones neurológicas pediátricas con análisis estadístico avanzado basada en datos oficiales de Haizea-Llevant, optimizada para Raspberry Pi 5**
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0-brightgreen.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
 ![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi%205-supported-red.svg)
+![Statistics](https://img.shields.io/badge/estadísticas-oficiales-green.svg)
 
-## 🎯 Características
+## 🆕 **NUEVA VERSIÓN 2.0 - Análisis Estadístico Profesional**
 
-- **📱 Interfaz Web Moderna**: Diseño responsive optimizado para tablets y dispositivos móviles
-- **🧪 Evaluación Completa**: Implementa las 5 áreas del test Haizea-Llevant
-- **📊 Resultados Detallados**: Generación automática de informes y estadísticas
-- **💾 Persistencia de Datos**: Almacenamiento de evaluaciones con descarga en JSON
-- **🐳 Docker Ready**: Contenedor optimizado para ARM64 (Raspberry Pi 5)
-- **⚡ Alto Rendimiento**: Optimizado para hardware limitado
-- **🔒 Seguro**: Contenedor sin privilegios y configuración de seguridad
+### ✨ **Características Avanzadas Implementadas:**
 
-## 🏥 Áreas de Evaluación
+#### 📊 **Análisis Estadístico Completo**
+- **32 hitos oficiales** de Haizea-Llevant con percentiles P25, P50, P75, P90
+- **Análisis automático** de resultados por área del desarrollo
+- **Alertas clínicas** para detección temprana de retrasos
+- **Recomendaciones automatizadas** basadas en patrones de desarrollo
 
-El test evalúa 5 áreas fundamentales del desarrollo infantil:
+#### 📈 **Visualización de Datos**
+- **Gráficos interactivos** con Chart.js mostrando curvas de percentiles
+- **Comparación visual** del paciente con curvas normativas
+- **Filtros por área** del desarrollo (Socialización, Lenguaje, Motricidad, etc.)
+- **Tabla detallada** de percentiles por cada hito evaluado
 
-1. **👥 Socialización** - Interacción social y vínculos
-2. **🗣️ Lenguaje y Comunicación** - Desarrollo del lenguaje
-3. **🏃 Motricidad Gruesa** - Desarrollo motor general
-4. **✋ Motricidad Fina** - Habilidades motoras precisas  
-5. **🧩 Resolución de Problemas** - Capacidad cognitiva
+#### 🏥 **Dashboard Clínico Profesional**
+- **4 pestañas especializadas**: Resumen, Estadísticas, Gráficos, Percentiles
+- **Análisis por área** con métricas específicas
+- **Sistema de alertas** codificado por colores
+- **Exportación completa** con análisis estadístico incluido
 
-## 🚀 Instalación Rápida
+## 🎯 Áreas de Evaluación Basadas en Datos Oficiales
+
+### 📋 **5 Áreas del Desarrollo con Percentiles Precisos:**
+
+1. **👥 Socialización** (6 hitos)
+   - Sonrisa espontánea y social
+   - Reconocimiento maternal
+   - Respuesta al nombre
+   - Ansiedad ante extraños
+   - Juego social cooperativo
+
+2. **🗣️ Lenguaje y Comunicación** (7 hitos)
+   - Sonidos guturales y balbuceo
+   - Primeras palabras específicas
+   - Comprensión de órdenes
+   - Desarrollo del vocabulario
+   - Combinación de palabras
+
+3. **🏃 Motricidad Gruesa** (8 hitos)
+   - Control cefálico
+   - Sedestación progresiva
+   - Gateo y desplazamiento
+   - Bipedestación y marcha
+   - Subida de escaleras
+
+4. **✋ Motricidad Fina** (6 hitos)
+   - Seguimiento visual
+   - Alcance y prensión
+   - Transferencia manual
+   - Pinza digital
+   - Grafomotricidad inicial
+
+5. **🧩 Resolución de Problemas** (5 hitos)
+   - Permanencia del objeto
+   - Imitación gestual
+   - Uso funcional de objetos
+   - Resolución de problemas simples
+
+## 🚀 Instalación y Despliegue
 
 ### Prerequisitos
 - Raspberry Pi 5 con Raspberry Pi OS
@@ -36,7 +77,7 @@ El test evalúa 5 áreas fundamentales del desarrollo infantil:
 
 ### Despliegue Automático
 ```bash
-# Clonar repositorio
+# Clonar repositorio con funcionalidades estadísticas
 git clone https://github.com/xukrutdonut/haizea-llevant.git
 cd haizea-llevant
 
@@ -44,171 +85,237 @@ cd haizea-llevant
 ./deploy-rpi.sh
 ```
 
-### Despliegue Manual
+### APIs Estadísticas Disponibles
 ```bash
-# Instalar dependencias
-npm install
+# Obtener datos oficiales de Haizea-Llevant
+curl http://localhost:3000/api/haizea/data
 
-# Construir imagen Docker
-docker build -t haizea-llevant:latest .
+# Análizar resultados de un paciente
+curl -X POST http://localhost:3000/api/haizea/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"edadMeses": 12, "resultados": [...]}'
 
-# Iniciar con Docker Compose
-docker-compose up -d
-
-# Verificar estado
-./manage.sh status
+# Generar datos para gráficos
+curl -X POST http://localhost:3000/api/haizea/chart-data \
+  -H "Content-Type: application/json" \
+  -d '{"edadMeses": 12, "area": "lenguaje"}'
 ```
 
-## 🎮 Uso
+## 📊 **Dashboard de Análisis Estadístico**
 
-### Acceso a la Aplicación
-- **Local**: http://localhost:3000
-- **Red local**: http://[IP-de-tu-RPi]:3000
+### 🎨 **Interfaz de Pestañas Profesional**
 
-### Gestión de Servicios
-```bash
-# Iniciar aplicación
-./manage.sh start
+#### 📋 **1. Resumen Ejecutivo**
+- Estadísticas generales del paciente
+- Puntuación global de desarrollo
+- Distribución de resultados por estado
 
-# Ver logs en tiempo real
-./manage.sh logs
+#### 📊 **2. Análisis Estadístico**
+- **Métricas por área** del desarrollo
+- **Análisis de percentiles** detallado
+- **Alertas clínicas** automáticas
+- **Recomendaciones** especializadas
 
-# Verificar estado
-./manage.sh status
+#### 📈 **3. Gráficos Interactivos**
+- **Curvas de percentiles** P25, P50, P75, P90
+- **Línea del paciente** comparada con normativas
+- **Filtros por área** del desarrollo
+- **Visualización responsive** para tablets
 
-# Parar aplicación
-./manage.sh stop
+#### 📉 **4. Tabla de Percentiles**
+- **Estado por hito** individual
+- **Comparación con percentiles** oficiales
+- **Codificación por colores** (Normal/Alerta/Avanzado)
+- **Exportación** de datos tabulares
 
-# Reiniciar aplicación
-./manage.sh restart
+## 🏥 **Funcionalidades Clínicas Avanzadas**
 
-# Actualizar y reconstruir
-./manage.sh update
+### ⚕️ **Sistema de Alertas Automáticas**
+- **🔴 Retraso Significativo**: Cuando edad < P25 y hito no superado
+- **🟡 Desarrollo Límite**: Rendimiento entre P25-P50
+- **🟢 Desarrollo Normal**: Rendimiento P50-P90
+- **🔵 Desarrollo Avanzado**: Rendimiento > P90
 
-# Verificar salud del servicio
-./manage.sh health
-```
+### 💡 **Recomendaciones Automatizadas**
+- **Seguimiento especializado** para retrasos detectados
+- **Estimulación temprana** por áreas específicas
+- **Programas de enriquecimiento** para desarrollo avanzado
+- **Referencias clínicas** basadas en patrones
 
-## 👨‍⚕️ Flujo de Evaluación
+### 📈 **Análisis Longitudinal Preparado**
+- Base de datos SQLite lista para historiales
+- Estructura para comparaciones temporales
+- Seguimiento de evolución por paciente
 
-1. **📝 Datos del Paciente**: Nombre, edad (0-72 meses), evaluador
-2. **🔍 Evaluación Interactiva**: Preguntas organizadas por áreas
-3. **📊 Puntuación**: ✅ Superado | ⚠️ Parcial | ❌ No superado
-4. **📈 Resultados**: Estadísticas detalladas y puntuación final
-5. **💾 Exportación**: Descarga de resultados en formato JSON
+## 🔬 **Validación Clínica y Científica**
 
-## ⚙️ Configuración
+### 📑 **Basado en Datos Oficiales**
+- **Tabla oficial** Haizea-Llevant descargada e integrada
+- **Percentiles validados** clínicamente
+- **32 hitos** con rangos de edad precisos
+- **Criterios diagnósticos** estándar
 
-### Variables de Entorno
-```env
-PORT=3000
-NODE_ENV=production
-TZ=Europe/Madrid
-```
+### 🎯 **Precisión Estadística**
+- **4 percentiles** por cada hito (P25, P50, P75, P90)
+- **Análisis automático** de desviaciones
+- **Cálculos estadísticos** en tiempo real
+- **Interpretación clínica** automatizada
 
-### Recursos del Sistema
-- **CPU**: 0.5-2.0 cores
-- **RAM**: 256MB-512MB
-- **Almacenamiento**: ~50MB
-
-### Puertos
-- **3000**: Servidor web principal
-- **Expuesto**: Configurable en docker-compose.yml
-
-## 📁 Estructura del Proyecto
+## 📁 **Estructura del Proyecto v2.0**
 
 ```
 haizea-llevant/
-├── 📄 server.js              # Servidor Express principal
-├── 📦 package.json           # Dependencias Node.js
-├── 🐳 Dockerfile             # Imagen Docker optimizada
-├── 🐙 docker-compose.yml     # Orquestación de servicios
-├── 🚀 deploy-rpi.sh          # Script de despliegue automático
-├── ⚙️ manage.sh              # Script de gestión
-├── 📁 public/                # Frontend web
-│   ├── 🌐 index.html        # Interfaz principal
-│   ├── 🎨 styles.css        # Estilos CSS
-│   └── ⚡ app.js            # Lógica JavaScript
-├── 📁 data/                  # Datos persistentes
-└── 📁 logs/                  # Logs de aplicación
+├── 📊 haizea-data.js              # Datos oficiales con percentiles
+├── 📈 TablaHaizeaLlevant.pdf      # Documento oficial descargado
+├── 📄 server.js                  # Servidor con análisis estadístico
+├── 📦 package.json               # Dependencias v2.0
+├── 🌐 public/
+│   ├── 🎨 index.html            # Interfaz con pestañas de análisis
+│   ├── 💫 styles.css            # Estilos para dashboard estadístico
+│   ├── ⚡ app.js                # Lógica con Chart.js y análisis
+│   └── 📋 app-old.js            # Versión anterior (backup)
+├── 🐳 Dockerfile                 # Imagen optimizada ARM64
+├── 🐙 docker-compose.yml         # Orquestación con límites de recursos
+├── 🚀 deploy-rpi.sh              # Despliegue automático
+├── ⚙️ manage.sh                  # Gestión de servicios
+└── 📚 README.md                  # Esta documentación
 ```
 
-## 🔧 Desarrollo
+## 🎮 **Flujo de Evaluación Mejorado**
 
-### Modo Desarrollo
-```bash
-# Instalar dependencias
-npm install
+### 1. 📝 **Registro Inicial**
+- Datos del paciente con validación de edad
+- Información del evaluador
+- Carga automática de datos oficiales
 
-# Iniciar servidor en modo desarrollo
-npm run dev
+### 2. 🔍 **Evaluación Interactiva**
+- **32 hitos oficiales** presentados secuencialmente
+- **Información de percentiles** en tiempo real
+- **Descripción detallada** de cada hito
+- **Progreso visual** con estadísticas actualizadas
 
-# Servidor disponible en http://localhost:3000
+### 3. 📊 **Análisis Automático**
+- **Procesamiento estadístico** inmediato al finalizar
+- **Generación de alertas** clínicas automáticas
+- **Cálculo de recomendaciones** personalizadas
+
+### 4. 📈 **Dashboard Completo**
+- **4 vistas especializadas** de resultados
+- **Gráficos interactivos** con Chart.js
+- **Exportación completa** con análisis incluido
+- **Impresión optimizada** para informes clínicos
+
+## 🎯 **Casos de Uso Clínicos**
+
+### 👶 **Evaluación de Desarrollo Temprano**
+- Detección precoz de retrasos del desarrollo
+- Seguimiento de prematuros
+- Evaluación de efectividad de intervenciones
+
+### 🏥 **Uso en Consulta Pediátrica**
+- Evaluación sistemática en revisiones
+- Generación automática de informes
+- Seguimiento longitudinal de pacientes
+
+### 🎓 **Formación y Docencia**
+- Herramienta didáctica con datos reales
+- Práctica de interpretación de percentiles
+- Simulación de casos clínicos
+
+## 💻 **Especificaciones Técnicas**
+
+### 🖥️ **Backend Mejorado**
+- Node.js + Express con APIs estadísticas
+- Análisis en tiempo real de percentiles
+- Generación automática de alertas
+- Exportación de datos completos
+
+### 🎨 **Frontend Avanzado**
+- Chart.js para gráficos interactivos
+- Interfaz responsive con pestañas
+- Sistema de notificaciones mejorado
+- PWA-ready para uso offline
+
+### 📊 **Análisis de Datos**
+- Cálculos estadísticos automáticos
+- Comparación con percentiles oficiales
+- Generación de recomendaciones
+- Alertas clínicas codificadas
+
+## 🔧 **Desarrollo y Personalización**
+
+### 🛠️ **APIs Disponibles**
+```javascript
+// Obtener todos los datos oficiales
+GET /api/haizea/data
+
+// Analizar resultados de paciente
+POST /api/haizea/analyze
+{
+  "edadMeses": 12,
+  "resultados": [...]
+}
+
+// Generar datos para gráficos
+POST /api/haizea/chart-data
+{
+  "edadMeses": 12,
+  "area": "lenguaje" // opcional
+}
 ```
 
-### API Endpoints
-- `GET /api/health` - Estado del servicio
-- `POST /api/test/start` - Iniciar nueva evaluación
-- `POST /api/test/result` - Guardar resultados
+### 📱 **Personalización de la Interfaz**
+- Temas de color configurables
+- Logos institucionales
+- Textos personalizables
+- Idiomas múltiples preparado
 
-## 📊 Monitoreo
+## 🏆 **Ventajas Competitivas v2.0**
 
-### Logs del Sistema
-```bash
-# Logs de la aplicación
-./manage.sh logs
+### ✅ **Ventajas Clínicas**
+- ✅ **Datos oficiales** validados científicamente
+- ✅ **Análisis automático** sin intervención manual
+- ✅ **Alertas inmediatas** para casos críticos
+- ✅ **Recomendaciones específicas** por área
+- ✅ **Visualización profesional** de resultados
 
-# Logs específicos de Docker
-docker-compose logs haizea-llevant
+### ✅ **Ventajas Técnicas**
+- ✅ **Optimizado para RPi5** con contenedores eficientes
+- ✅ **Gráficos interactivos** con Chart.js
+- ✅ **APIs REST** para integración
+- ✅ **Exportación completa** de datos
+- ✅ **Interfaz responsive** para tablets
 
-# Estado de recursos
-docker stats
-```
+### ✅ **Ventajas de Implementación**
+- ✅ **Despliegue automático** con un comando
+- ✅ **Sin dependencias externas** una vez instalado
+- ✅ **Escalable** y personalizable
+- ✅ **Documentación completa** incluida
 
-### Health Check
-El contenedor incluye verificaciones automáticas de salud cada 30 segundos.
+## 👨‍💻 **Desarrollado por NeuropediaLab**
 
-## 🛠️ Troubleshooting
+**Especialistas en Neurología Pediátrica y Tecnología Médica**
 
-### Problemas Comunes
-
-1. **Puerto ocupado**: Cambiar puerto en docker-compose.yml
-2. **Memoria insuficiente**: Aumentar swap en la RPi
-3. **Servicio no responde**: Verificar con `./manage.sh health`
-
-### Logs de Debug
-```bash
-# Ver logs detallados
-docker-compose logs -f haizea-llevant
-
-# Entrar al contenedor
-docker exec -it haizea-llevant-app sh
-
-# Verificar recursos del sistema
-htop
-```
-
-## 🏥 Contexto Clínico
-
-El **Test Haizea-Llevant** es una herramienta de evaluación del desarrollo infantil ampliamente utilizada en pediatría y neuropediatría. Esta implementación digital facilita:
-
-- ✅ Evaluaciones más eficientes y estandarizadas
-- 📊 Generación automática de informes
-- 💾 Histórico de evaluaciones por paciente
-- 📱 Acceso desde cualquier dispositivo
-
-## 👨‍💻 Desarrollado por
-
-**NeuropediaLab** - Especialistas en Neurología y Tecnología Médica
-
-## 📄 Licencia
-
-MIT License - Ver archivo LICENSE para más detalles.
+- 🧠 Experiencia clínica en desarrollo infantil
+- 💻 Tecnología médica avanzada
+- 📊 Análisis estadístico especializado
+- 🎯 Enfoque en usabilidad clínica
 
 ---
 
-⭐ **¿Te resulta útil este proyecto?** ¡Dale una estrella en GitHub!
+## 🌐 **Repositorio y Recursos**
 
-🐛 **¿Encontraste un bug?** Abre un issue en el repositorio.
+- **🔗 GitHub**: https://github.com/xukrutdonut/haizea-llevant
+- **📋 Documentación oficial**: Incluida en el repositorio
+- **📊 Datos oficiales**: TablaHaizeaLlevant.pdf integrada
+- **💡 Soporte**: Issues en GitHub
 
-💡 **¿Tienes sugerencias?** ¡Las contribuciones son bienvenidas!
+---
+
+⭐ **¿Te resulta útil esta herramienta clínica?** ¡Dale una estrella en GitHub!
+
+🐛 **¿Encontraste un bug o tienes sugerencias?** Abre un issue en el repositorio.
+
+💡 **¿Quieres contribuir?** ¡Las contribuciones médicas y técnicas son bienvenidas!
+
+📧 **¿Necesitas implementación en tu centro?** Contáctanos para soporte especializado.
