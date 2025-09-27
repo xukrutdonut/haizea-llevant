@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Haizea-Llevant Digitalizado</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Test Haizea-Llevant Digitalizado</h1>
+            <p class="subtitle">Evaluación neurológica pediátrica</p>
+        </header>
+
+        <main>
+            <div id="welcome-screen" class="screen active">
+                <div class="card">
+                    <h2>Bienvenido al Test Haizea-Llevant</h2>
+                    <p>Esta aplicación permite realizar evaluaciones neurológicas digitalizadas basadas en el test Haizea-Llevant.</p>
+                    
+                    <form id="patient-form">
+                        <div class="form-group">
+                            <label for="patientName">Nombre del paciente:</label>
+                            <input type="text" id="patientName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="patientAge">Edad (meses):</label>
+                            <input type="number" id="patientAge" min="0" max="72" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="evaluatorName">Evaluador:</label>
+                            <input type="text" id="evaluatorName" required>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary">Iniciar Evaluación</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="test-screen" class="screen">
+                <div class="test-header">
+                    <h3 id="current-area">Área de evaluación</h3>
+                    <div class="progress-bar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                </div>
+
+                <div class="test-content">
+                    <div id="test-question"></div>
+                    <div class="test-actions">
+                        <button class="btn-success" onclick="recordResult('pass')">✓ Superado</button>
+                        <button class="btn-warning" onclick="recordResult('partial')">~ Parcial</button>
+                        <button class="btn-danger" onclick="recordResult('fail')">✗ No superado</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results-screen" class="screen">
+                <div class="card">
+                    <h2>📊 Resultados de la Evaluación</h2>
+                    <div id="results-summary"></div>
+                    <button class="btn-primary" onclick="newTest()">Nueva Evaluación</button>
+                    <button class="btn-secondary" onclick="downloadResults()">Descargar Resultados</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
