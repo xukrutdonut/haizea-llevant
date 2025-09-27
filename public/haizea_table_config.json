@@ -1,0 +1,271 @@
+{
+  "image_dimensions": {
+    "width": 1200,
+    "height": 824
+  },
+  "age_scale_mapping": {
+    "0": 0.065,
+    "1": 0.085,
+    "2": 0.105,
+    "3": 0.125,
+    "4": 0.145,
+    "5": 0.165,
+    "6": 0.185,
+    "7": 0.205,
+    "8": 0.225,
+    "9": 0.245,
+    "10": 0.265,
+    "11": 0.285,
+    "12": 0.305,
+    "15": 0.355,
+    "18": 0.405,
+    "21": 0.455,
+    "24": 0.505,
+    "27": 0.555,
+    "30": 0.605,
+    "33": 0.655,
+    "36": 0.705,
+    "39": 0.755,
+    "42": 0.805,
+    "45": 0.855,
+    "48": 0.905,
+    "54": 0.955,
+    "60": 0.985
+  },
+  "area_mapping": {
+    "socializacion": {
+      "y_range": [
+        0.05,
+        0.25
+      ],
+      "center_y": 0.15
+    },
+    "lenguaje": {
+      "y_range": [
+        0.25,
+        0.45
+      ],
+      "center_y": 0.35
+    },
+    "motricidad_gruesa": {
+      "y_range": [
+        0.45,
+        0.65
+      ],
+      "center_y": 0.55
+    },
+    "motricidad_fina": {
+      "y_range": [
+        0.65,
+        0.85
+      ],
+      "center_y": 0.75
+    },
+    "resolucion_problemas": {
+      "y_range": [
+        0.85,
+        1.0
+      ],
+      "center_y": 0.92
+    }
+  },
+  "hito_positions": {
+    "soc_001": {
+      "x": 0.105,
+      "y": 0.13,
+      "age": 2,
+      "area": "socializacion"
+    },
+    "soc_002": {
+      "x": 0.095,
+      "y": 0.16999999999999998,
+      "age": 1.5,
+      "area": "socializacion"
+    },
+    "soc_003": {
+      "x": 0.125,
+      "y": 0.13999999999999999,
+      "age": 3,
+      "area": "socializacion"
+    },
+    "soc_004": {
+      "x": 0.245,
+      "y": 0.16,
+      "age": 9,
+      "area": "socializacion"
+    },
+    "soc_005": {
+      "x": 0.225,
+      "y": 0.13,
+      "age": 8,
+      "area": "socializacion"
+    },
+    "soc_006": {
+      "x": 0.405,
+      "y": 0.16999999999999998,
+      "age": 18,
+      "area": "socializacion"
+    },
+    "len_001": {
+      "x": 0.105,
+      "y": 0.31999999999999995,
+      "age": 2,
+      "area": "lenguaje"
+    },
+    "len_002": {
+      "x": 0.145,
+      "y": 0.36,
+      "age": 4,
+      "area": "lenguaje"
+    },
+    "len_003": {
+      "x": 0.185,
+      "y": 0.32999999999999996,
+      "age": 6,
+      "area": "lenguaje"
+    },
+    "len_004": {
+      "x": 0.285,
+      "y": 0.37,
+      "age": 11,
+      "area": "lenguaje"
+    },
+    "len_005": {
+      "x": 0.305,
+      "y": 0.33999999999999997,
+      "age": 12,
+      "area": "lenguaje"
+    },
+    "len_006": {
+      "x": 0.355,
+      "y": 0.36,
+      "age": 15,
+      "area": "lenguaje"
+    },
+    "len_007": {
+      "x": 0.455,
+      "y": 0.32999999999999996,
+      "age": 21,
+      "area": "lenguaje"
+    },
+    "mg_001": {
+      "x": 0.105,
+      "y": 0.52,
+      "age": 2,
+      "area": "motricidad_gruesa"
+    },
+    "mg_002": {
+      "x": 0.165,
+      "y": 0.56,
+      "age": 5,
+      "area": "motricidad_gruesa"
+    },
+    "mg_003": {
+      "x": 0.205,
+      "y": 0.53,
+      "age": 7,
+      "area": "motricidad_gruesa"
+    },
+    "mg_004": {
+      "x": 0.245,
+      "y": 0.5700000000000001,
+      "age": 9,
+      "area": "motricidad_gruesa"
+    },
+    "mg_005": {
+      "x": 0.265,
+      "y": 0.54,
+      "age": 10,
+      "area": "motricidad_gruesa"
+    },
+    "mg_006": {
+      "x": 0.305,
+      "y": 0.56,
+      "age": 12,
+      "area": "motricidad_gruesa"
+    },
+    "mg_007": {
+      "x": 0.32166666666666666,
+      "y": 0.53,
+      "age": 13,
+      "area": "motricidad_gruesa"
+    },
+    "mg_008": {
+      "x": 0.405,
+      "y": 0.5700000000000001,
+      "age": 18,
+      "area": "motricidad_gruesa"
+    },
+    "mf_001": {
+      "x": 0.085,
+      "y": 0.72,
+      "age": 1,
+      "area": "motricidad_fina"
+    },
+    "mf_002": {
+      "x": 0.125,
+      "y": 0.76,
+      "age": 3,
+      "area": "motricidad_fina"
+    },
+    "mf_003": {
+      "x": 0.145,
+      "y": 0.73,
+      "age": 4,
+      "area": "motricidad_fina"
+    },
+    "mf_004": {
+      "x": 0.205,
+      "y": 0.77,
+      "age": 7,
+      "area": "motricidad_fina"
+    },
+    "mf_005": {
+      "x": 0.265,
+      "y": 0.74,
+      "age": 10,
+      "area": "motricidad_fina"
+    },
+    "mf_006": {
+      "x": 0.355,
+      "y": 0.76,
+      "age": 15,
+      "area": "motricidad_fina"
+    },
+    "rp_001": {
+      "x": 0.165,
+      "y": 0.9,
+      "age": 5,
+      "area": "resolucion_problemas"
+    },
+    "rp_002": {
+      "x": 0.225,
+      "y": 0.93,
+      "age": 8,
+      "area": "resolucion_problemas"
+    },
+    "rp_003": {
+      "x": 0.265,
+      "y": 0.91,
+      "age": 10,
+      "area": "resolucion_problemas"
+    },
+    "rp_004": {
+      "x": 0.3383333333333333,
+      "y": 0.93,
+      "age": 14,
+      "area": "resolucion_problemas"
+    },
+    "rp_005": {
+      "x": 0.405,
+      "y": 0.9,
+      "age": 18,
+      "area": "resolucion_problemas"
+    }
+  },
+  "calibration_info": {
+    "version": "1.0",
+    "description": "Calibraci\u00f3n para tabla oficial Haizea-Llevant horizontal",
+    "notes": "Posiciones calibradas manualmente basadas en an\u00e1lisis visual"
+  }
+}

@@ -99,7 +99,8 @@
                         <button class="tab-button" onclick="showResultTab('statistics')">📊 Estadísticas</button>
                         <button class="tab-button" onclick="showResultTab('charts')">📈 Gráficos</button>
                         <button class="tab-button" onclick="showResultTab('percentiles')">📉 Percentiles</button>
-                        <button class="tab-button" onclick="showResultTab('haizea-table')">📋 Tabla Haizea-Llevant</button>
+                        <button class="tab-button" onclick="showResultTab('haizea-table')">📋 Tabla Visual</button>
+                        <button class="tab-button" onclick="showResultTab('haizea-official')">📋 Tabla Oficial</button>
                     </div>
 
                     <!-- Contenido de pestañas -->
@@ -197,6 +198,76 @@
                             <div class="haizea-table-wrapper">
                                 <div id="haizea-visual-table"></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div id="haizea-official-tab" class="result-tab-content">
+                        <h3>📋 Tabla Oficial Haizea-Llevant - Posición del Niño</h3>
+                        <div class="official-table-controls">
+                            <div class="patient-info-official">
+                                <div class="patient-age-official">
+                                    <span class="age-label">👶 Paciente:</span>
+                                    <span class="age-value" id="official-patient-name">-</span>
+                                    <span class="age-separator">|</span>
+                                    <span class="age-label">📅 Edad:</span>
+                                    <span class="age-value" id="official-patient-age">-</span>
+                                    <span class="age-unit">meses</span>
+                                </div>
+                            </div>
+                            <div class="zoom-controls">
+                                <button class="btn-zoom" onclick="zoomOfficial(0.8)">🔍-</button>
+                                <span id="zoom-level">100%</span>
+                                <button class="btn-zoom" onclick="zoomOfficial(1.2)">🔍+</button>
+                                <button class="btn-zoom" onclick="resetZoomOfficial()">↺ Reset</button>
+                            </div>
+                        </div>
+                        
+                        <div class="official-legend">
+                            <div class="legend-row">
+                                <div class="legend-item">
+                                    <div class="legend-line age-line-official"></div>
+                                    <span>Edad cronológica del paciente</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-point hito-passed-official"></div>
+                                    <span>Hito superado</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-point hito-partial-official"></div>
+                                    <span>Hito parcial</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-point hito-failed-official"></div>
+                                    <span>Hito no superado</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="official-table-container" id="official-table-container">
+                            <div class="official-table-wrapper">
+                                <div class="age-line-container" id="age-line-container">
+                                    <div class="age-line-vertical" id="age-line-vertical"></div>
+                                    <div class="age-label-marker" id="age-label-marker">
+                                        <span id="age-marker-text">12m</span>
+                                    </div>
+                                </div>
+                                <img id="haizea-official-img" 
+                                     src="tabla_haizea_horizontal.png" 
+                                     alt="Tabla Oficial Haizea-Llevant"
+                                     onload="initializeOfficialTable()" 
+                                     draggable="false">
+                                <div class="hitos-overlay" id="hitos-overlay"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="official-instructions">
+                            <h4>📖 Cómo interpretar la tabla:</h4>
+                            <ul>
+                                <li><strong>Línea roja vertical:</strong> Marca la edad cronológica de tu paciente</li>
+                                <li><strong>Puntos coloreados:</strong> Representan los hitos evaluados del paciente</li>
+                                <li><strong>Bandas de color:</strong> Muestran los percentiles normales de desarrollo (P25, P50, P75, P90)</li>
+                                <li><strong>Zoom:</strong> Usa los controles para acercarte y ver detalles específicos</li>
+                            </ul>
                         </div>
                     </div>
                 </div>

@@ -621,6 +621,11 @@ function showResultTab(tabName) {
     if (tabName === 'haizea-table') {
         generateHaizeaTable();
     }
+    
+    // Si es la tabla oficial, inicializarla
+    if (tabName === 'haizea-official') {
+        generateOfficialTable();
+    }
 }
 
 // Descargar resultados en PDF (función placeholder)
@@ -1088,3 +1093,235 @@ function getStatusIcon(status, isCurrent) {
     };
     return icons[status] || '❔';
 }
+
+// Variables para tabla oficial
+let officialTableScale = 1;
+let officialImageWidth = 0;
+let officialImageHeight = 0;
+let tableConfig = null;
+
+// Cargar configuración de la tabla
+async function loadTableConfig() {
+    try {
+        const response = await fetch('haizea_table_config.json');
+        tableConfig = await response.json();
+        console.log('✅ Configuración de tabla cargada:', tableConfig.calibration_info.version);
+        return true;
+    } catch (error) {
+        console.error('❌ Error cargando configuración de tabla:', error);
+        return false;
+    }
+}
+
+// Generar tabla oficial con imagen de fondo
+async function generateOfficialTable() {
+    if (!currentTest) {
+        console.log('No hay test actual para mostrar en tabla oficial');
+        return;
+    }
+    
+    // Cargar configuración si no está cargada
+    if (!tableConfig) {
+        const loaded = await loadTableConfig();
+        if (!loaded) {
+            showNotification('Error cargando configuración de tabla', 'error');
+            return;
+        }
+    }
+    
+    const patientAge = currentTest.patientAge;
+    const patientName = currentTest.patientName;
+    
+    // Actualizar información del paciente
+    document.getElementById('official-patient-name').textContent = patientName;
+    document.getElementById('official-patient-age').textContent = patientAge;
+    
+    console.log(`Generando tabla oficial para: ${patientName} (${patientAge} meses)`);
+}
+
+// Inicializar tabla oficial cuando la imagen se carga
+function initializeOfficialTable() {
+    const img = document.getElementById('haizea-official-img');
+    officialImageWidth = img.clientWidth;
+    officialImageHeight = img.clientHeight;
+    
+    console.log(`Imagen oficial cargada: ${officialImageWidth}x${officialImageHeight}px`);
+    
+    if (currentTest) {
+        updateAgeLinePosition(currentTest.patientAge);
+        renderHitoMarkers();
+    }
+}
+
+// Actualizar posición de la línea de edad
+function updateAgeLinePosition(ageInMonths) {
+    const ageLine = document.getElementById('age-line-vertical');
+    const ageLabel = document.getElementById('age-label-marker');
+    const ageText = document.getElementById('age-marker-text');
+    
+    if (!ageLine || !ageLabel) return;
+    
+    // Calcular posición basada en la edad
+    const position = calculateAgePosition(ageInMonths);
+    const positionPercent = position * 100;
+    
+    // Actualizar posición de línea y etiqueta
+    ageLine.style.left = `${positionPercent}%`;
+    ageLabel.style.left = `${positionPercent}%`;
+    ageText.textContent = `${ageInMonths}m`;
+    
+    console.log(`Línea de edad posicionada en ${positionPercent.toFixed(1)}% para ${ageInMonths} meses`);
+}
+
+// Calcular posición en la imagen basada en la edad
+function calculateAgePosition(ageInMonths) {
+    if (!tableConfig || !tableConfig.age_scale_mapping) {
+        console.warn('Configuración de tabla no disponible, usando fallback');
+        return 0.5;
+    }
+    
+    const ageMapping = tableConfig.age_scale_mapping;
+    const ages = Object.keys(ageMapping).map(Number).sort((a, b) => a - b);
+    
+    // Si la edad está fuera del rango, usar los extremos
+    if (ageInMonths <= ages[0]) return ageMapping[ages[0]];
+    if (ageInMonths >= ages[ages.length - 1]) return ageMapping[ages[ages.length - 1]];
+    
+    // Encontrar el rango donde está la edad
+    for (let i = 0; i < ages.length - 1; i++) {
+        const lowerAge = ages[i];
+        const upperAge = ages[i + 1];
+        
+        if (ageInMonths >= lowerAge && ageInMonths <= upperAge) {
+            // Interpolación lineal
+            const ratio = (ageInMonths - lowerAge) / (upperAge - lowerAge);
+            const lowerPos = ageMapping[lowerAge];
+            const upperPos = ageMapping[upperAge];
+            return lowerPos + ratio * (upperPos - lowerPos);
+        }
+    }
+    
+    return 0.5; // Fallback al centro
+}
+
+// Renderizar marcadores de hitos sobre la tabla
+function renderHitoMarkers() {
+    const overlay = document.getElementById('hitos-overlay');
+    if (!overlay || !testResults || !tableConfig) {
+        console.log('No se pueden renderizar marcadores: faltan datos');
+        return;
+    }
+    
+    // Limpiar marcadores existentes
+    overlay.innerHTML = '';
+    
+    const hitoPositions = tableConfig.hito_positions;
+    let markersCreated = 0;
+    
+    testResults.forEach((result, index) => {
+        const position = hitoPositions[result.hitoId];
+        if (position) {
+            const marker = createHitoMarker(result, position);
+            overlay.appendChild(marker);
+            markersCreated++;
+        }
+    });
+    
+    console.log(`✅ Renderizados ${markersCreated} marcadores de hitos`);
+}
+
+// Crear marcador visual para un hito
+function createHitoMarker(result, position) {
+    const marker = document.createElement('div');
+    marker.className = `hito-marker-official ${result.result}`;
+    marker.style.left = `${position.x * 100}%`;
+    marker.style.top = `${position.y * 100}%`;
+    
+    // Tooltip con información del hito
+    const tooltip = document.createElement('div');
+    tooltip.className = 'hito-tooltip';
+    tooltip.innerHTML = `
+        <strong>${result.hitoItem}</strong><br>
+        Resultado: ${getResultText(result.result)}<br>
+        Área: ${getAreaDisplayName(result.area)}<br>
+        Edad esperada: ${position.age} meses
+    `;
+    marker.appendChild(tooltip);
+    
+    // Eventos para interactividad
+    marker.addEventListener('click', () => {
+        showHitoDetails(result);
+    });
+    
+    marker.addEventListener('mouseenter', () => {
+        marker.style.transform = 'translate(-50%, -50%) scale(1.5)';
+        marker.style.zIndex = '20';
+    });
+    
+    marker.addEventListener('mouseleave', () => {
+        marker.style.transform = 'translate(-50%, -50%) scale(1)';
+        marker.style.zIndex = '10';
+    });
+    
+    return marker;
+}
+
+// Obtener texto descriptivo del resultado
+function getResultText(result) {
+    const texts = {
+        'pass': 'Superado',
+        'partial': 'Parcial', 
+        'fail': 'No superado'
+    };
+    return texts[result] || 'Desconocido';
+}
+
+// Mostrar detalles de un hito
+function showHitoDetails(result) {
+    const position = tableConfig?.hito_positions?.[result.hitoId];
+    const expectedAge = position ? `${position.age} meses` : 'No disponible';
+    
+    const message = `
+🎯 HITO: ${result.hitoItem}
+
+📊 RESULTADO: ${getResultText(result.result)}
+📋 ÁREA: ${getAreaDisplayName(result.area)}
+📅 EDAD ESPERADA: ${expectedAge}
+👶 PACIENTE: ${currentTest.patientAge} meses
+
+${result.result === 'pass' ? '✅ Hito superado correctamente' :
+  result.result === 'partial' ? '⚠️ Hito parcialmente logrado' :
+  '❌ Hito no superado - considerar seguimiento'}
+    `.trim();
+    
+    alert(message);
+}
+
+// Funciones de zoom para tabla oficial
+function zoomOfficial(factor) {
+    officialTableScale *= factor;
+    officialTableScale = Math.max(0.5, Math.min(3, officialTableScale)); // Límites de zoom
+    
+    const img = document.getElementById('haizea-official-img');
+    img.style.transform = `scale(${officialTableScale})`;
+    
+    updateZoomDisplay();
+}
+
+function resetZoomOfficial() {
+    officialTableScale = 1;
+    const img = document.getElementById('haizea-official-img');
+    img.style.transform = 'scale(1)';
+    updateZoomDisplay();
+}
+
+function updateZoomDisplay() {
+    document.getElementById('zoom-level').textContent = `${Math.round(officialTableScale * 100)}%`;
+}
+
+// Redimensionar cuando cambia el tamaño de ventana
+window.addEventListener('resize', () => {
+    if (document.getElementById('haizea-official-tab').classList.contains('active')) {
+        setTimeout(initializeOfficialTable, 100);
+    }
+});
