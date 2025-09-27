@@ -149,6 +149,12 @@ function showCurrentQuestion() {
                 </div>
             </div>
         `;
+        
+        // Actualizar panel de referencia si está abierto
+        const panel = document.getElementById('haizea-reference-panel');
+        if (panel && panel.style.display !== 'none') {
+            updateCurrentHitoContext();
+        }
     } else {
         // Test completado
         finishTest();
@@ -610,6 +616,11 @@ function showResultTab(tabName) {
     // Mostrar pestaña seleccionada
     document.getElementById(tabName + '-tab').classList.add('active');
     document.querySelector(`[onclick="showResultTab('${tabName}')"]`).classList.add('active');
+    
+    // Si es la tabla de Haizea-Llevant, generarla
+    if (tabName === 'haizea-table') {
+        generateHaizeaTable();
+    }
 }
 
 // Descargar resultados en PDF (función placeholder)
@@ -627,6 +638,10 @@ function newTest() {
     
     // Ocultar estadísticas del header
     document.getElementById('stats-header').style.display = 'none';
+    
+    // Cerrar panel de referencia si está abierto
+    document.getElementById('haizea-reference-panel').style.display = 'none';
+    document.getElementById('haizea-summary-stats').style.display = 'none';
     
     // Limpiar formulario
     document.getElementById('patient-form').reset();
@@ -714,4 +729,362 @@ function showNotification(message, type = 'info') {
             }
         }, 300);
     }, 4000);
+}
+
+// Generar tabla visual de Haizea-Llevant con posición del paciente
+function generateHaizeaTable() {
+    if (!currentTest || !haizeaData) {
+        console.log('No hay datos de test o Haizea para generar la tabla');
+        return;
+    }
+    
+    const patientAge = currentTest.patientAge;
+    const tableContainer = document.getElementById('haizea-visual-table');
+    const ageDisplay = document.getElementById('patient-age-display');
+    const summaryStats = document.getElementById('haizea-summary-stats');
+    
+    // Mostrar edad del paciente
+    ageDisplay.textContent = patientAge;
+    
+    // Calcular estadísticas de resumen
+    const stats = calculateDevelopmentSummary(patientAge);
+    updateSummaryStats(stats);
+    summaryStats.style.display = 'block';
+    
+    // Generar HTML de la tabla
+    let tableHTML = '';
+    
+    // Procesar cada área del desarrollo
+    for (let areaKey in haizeaData) {
+        const area = haizeaData[areaKey];
+        const areaName = getAreaDisplayName(areaKey);
+        
+        tableHTML += `
+            <div class="haizea-area-section">
+                <div class="haizea-area-header">
+                    ${areaName}
+                </div>
+                <div class="haizea-timeline">
+                    ${generateAreaTimeline(areaKey, area, patientAge)}
+                </div>
+            </div>
+        `;
+    }
+    
+    tableContainer.innerHTML = tableHTML;
+}
+
+// Calcular estadísticas de resumen del desarrollo
+function calculateDevelopmentSummary(patientAge) {
+    let totalHitos = 0;
+    let hitosEsperados = 0;
+    let hitosSuperados = 0;
+    let hitosRetrasados = 0;
+    let hitosAvanzados = 0;
+    
+    // Contar hitos por área
+    for (let areaKey in haizeaData) {
+        const area = haizeaData[areaKey];
+        area.forEach(hito => {
+            totalHitos++;
+            
+            // Determinar si el hito debería estar superado a esta edad
+            if (patientAge >= hito.percentiles.p50) {
+                hitosEsperados++;
+            }
+            
+            // Ver resultado real del hito
+            const resultado = getHitoResult(hito.id);
+            if (resultado) {
+                if (resultado.result === 'pass') {
+                    hitosSuperados++;
+                    // Si el niño lo pasó antes de P25, es avanzado
+                    if (patientAge < hito.percentiles.p25) {
+                        hitosAvanzados++;
+                    }
+                } else if (resultado.result === 'fail') {
+                    // Si no lo pasó después de P50, es retraso
+                    if (patientAge > hito.percentiles.p50) {
+                        hitosRetrasados++;
+                    }
+                }
+            }
+        });
+    }
+    
+    // Determinar estado general del desarrollo
+    let developmentStatus = 'normal';
+    let developmentClass = 'normal';
+    
+    if (hitosRetrasados > 2) {
+        developmentStatus = 'Retraso en el desarrollo';
+        developmentClass = 'delayed';
+    } else if (hitosRetrasados > 0) {
+        developmentStatus = 'Desarrollo con áreas de preocupación';
+        developmentClass = 'concerning';
+    } else if (hitosAvanzados > 2) {
+        developmentStatus = 'Desarrollo avanzado';
+        developmentClass = 'excellent';
+    } else if (hitosSuperados >= hitosEsperados * 0.8) {
+        developmentStatus = 'Desarrollo adecuado';
+        developmentClass = 'good';
+    }
+    
+    return {
+        totalHitos,
+        hitosEsperados,
+        hitosSuperados,
+        hitosRetrasados,
+        hitosAvanzados,
+        developmentStatus,
+        developmentClass
+    };
+}
+
+// Actualizar estadísticas de resumen en la UI
+function updateSummaryStats(stats) {
+    document.getElementById('expected-hitos').textContent = `${stats.hitosSuperados}/${stats.hitosEsperados}`;
+    document.getElementById('passed-hitos').textContent = `${stats.hitosSuperados}/${stats.totalHitos}`;
+    
+    const developmentElement = document.getElementById('general-development');
+    developmentElement.textContent = stats.developmentStatus;
+    developmentElement.className = `stat-value development-status ${stats.developmentClass}`;
+}
+
+// Generar timeline visual para un área específica
+function generateAreaTimeline(areaKey, hitos, patientAge) {
+    // Encontrar rango de meses para esta área
+    let minAge = Math.min(...hitos.map(h => h.percentiles.p25));
+    let maxAge = Math.max(...hitos.map(h => h.percentiles.p90));
+    
+    // Extender el rango para incluir la edad del paciente si es necesario
+    minAge = Math.min(minAge, patientAge - 2);
+    maxAge = Math.max(maxAge, patientAge + 6);
+    
+    // Redondear a múltiplos de 3 meses para mejor visualización
+    minAge = Math.max(0, Math.floor(minAge / 3) * 3);
+    maxAge = Math.ceil(maxAge / 3) * 3;
+    
+    const ageRange = maxAge - minAge;
+    
+    // Generar escala de edad
+    let ageScaleHTML = '<div class="age-scale"><div class="age-markers">';
+    
+    // Marcadores de edad cada 3 meses
+    for (let age = minAge; age <= maxAge; age += 3) {
+        const position = ((age - minAge) / ageRange) * 100;
+        ageScaleHTML += `
+            <div class="age-marker" style="left: ${position}%">
+                <div class="age-marker-label">${age}m</div>
+            </div>
+        `;
+    }
+    
+    // Línea de edad del paciente
+    const patientPosition = ((patientAge - minAge) / ageRange) * 100;
+    ageScaleHTML += `
+        <div class="patient-age-line" style="left: ${patientPosition}%"></div>
+    `;
+    
+    ageScaleHTML += '</div></div>';
+    
+    // Generar hitos
+    let hitosHTML = '<div class="hitos-timeline">';
+    
+    hitos.forEach(hito => {
+        const hitoResult = getHitoResult(hito.id);
+        const status = hitoResult ? hitoResult.result : 'not-evaluated';
+        
+        hitosHTML += `
+            <div class="hito-item">
+                <div class="hito-info">
+                    <div class="hito-description">
+                        <div class="hito-title">${hito.item}</div>
+                        <div class="hito-subtitle">${hito.descripcion}</div>
+                    </div>
+                    <div class="hito-percentiles">
+                        ${generatePercentileBar(hito, patientAge, minAge, ageRange)}
+                    </div>
+                </div>
+                <div class="hito-status ${status}"></div>
+            </div>
+        `;
+    });
+    
+    hitosHTML += '</div>';
+    
+    return ageScaleHTML + hitosHTML;
+}
+
+// Generar barra de percentiles visual
+function generatePercentileBar(hito, patientAge, minAge, ageRange) {
+    const p = hito.percentiles;
+    
+    // Calcular posiciones relativas
+    const p25Pos = Math.max(0, Math.min(100, ((p.p25 - minAge) / ageRange) * 100));
+    const p50Pos = Math.max(0, Math.min(100, ((p.p50 - minAge) / ageRange) * 100));
+    const p75Pos = Math.max(0, Math.min(100, ((p.p75 - minAge) / ageRange) * 100));
+    const p90Pos = Math.max(0, Math.min(100, ((p.p90 - minAge) / ageRange) * 100));
+    const patientPos = Math.max(0, Math.min(100, ((patientAge - minAge) / ageRange) * 100));
+    
+    // Calcular anchos de los rangos
+    const range0_25 = p25Pos;
+    const range25_50 = p50Pos - p25Pos;
+    const range50_75 = p75Pos - p50Pos;
+    const range75_90 = p90Pos - p75Pos;
+    const range90_100 = 100 - p90Pos;
+    
+    // Determinar status del paciente
+    const patientStatus = getPatientDevelopmentStatus(hito, patientAge);
+    const statusClass = getStatusClass(patientStatus.status);
+    
+    return `
+        <div class="percentile-bar" title="Percentiles para: ${hito.item}">
+            <div class="percentile-values">
+                <span title="25% de niños logra este hito a los ${p.p25} meses">P25: ${p.p25}m</span>
+                <span title="50% de niños logra este hito a los ${p.p50} meses">P50: ${p.p50}m</span>
+                <span title="75% de niños logra este hito a los ${p.p75} meses">P75: ${p.p75}m</span>
+                <span title="90% de niños logra este hito a los ${p.p90} meses">P90: ${p.p90}m</span>
+            </div>
+            <div class="percentile-ranges">
+                <div class="percentile-range p0-25" style="width: ${range0_25}%" title="Desarrollo temprano"></div>
+                <div class="percentile-range p25-50" style="width: ${range25_50}%" title="Rango normal bajo"></div>
+                <div class="percentile-range p50-75" style="width: ${range50_75}%" title="Rango normal"></div>
+                <div class="percentile-range p75-90" style="width: ${range75_90}%" title="Rango normal alto"></div>
+                <div class="percentile-range p90-100" style="width: ${range90_100}%" title="Desarrollo tardío"></div>
+            </div>
+            <div class="patient-position-indicator ${statusClass}" 
+                 style="left: ${patientPos}%" 
+                 title="Paciente (${patientAge} meses): ${patientStatus.description}">
+            </div>
+        </div>
+    `;
+}
+
+// Obtener clase CSS para el status del desarrollo
+function getStatusClass(status) {
+    const statusMap = {
+        'early': 'status-early',
+        'normal-low': 'status-normal',
+        'normal': 'status-normal',
+        'normal-high': 'status-normal',
+        'advanced': 'status-advanced'
+    };
+    return statusMap[status] || 'status-normal';
+}
+
+// Obtener resultado de un hito específico
+function getHitoResult(hitoId) {
+    return testResults.find(result => result.hitoId === hitoId);
+}
+
+// Obtener estado del desarrollo del paciente en un hito
+function getPatientDevelopmentStatus(hito, patientAge) {
+    const p = hito.percentiles;
+    
+    if (patientAge < p.p25) {
+        return { status: 'early', description: 'Temprano para la edad' };
+    } else if (patientAge < p.p50) {
+        return { status: 'normal-low', description: 'Normal (percentil bajo)' };
+    } else if (patientAge < p.p75) {
+        return { status: 'normal', description: 'Normal' };
+    } else if (patientAge < p.p90) {
+        return { status: 'normal-high', description: 'Normal (percentil alto)' };
+    } else {
+        return { status: 'advanced', description: 'Avanzado para la edad' };
+    }
+}
+
+// Función para alternar el panel de referencia durante el test
+function toggleHaizeaReference() {
+    const panel = document.getElementById('haizea-reference-panel');
+    const ageDisplay = document.getElementById('ref-patient-age');
+    
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        if (currentTest) {
+            ageDisplay.textContent = currentTest.patientAge;
+            updateCurrentHitoContext();
+            panel.style.display = 'block';
+        }
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+// Actualizar contexto del hito actual en el panel de referencia
+function updateCurrentHitoContext() {
+    if (!currentTest || !haizeaData) return;
+    
+    const contextContainer = document.getElementById('current-hito-context');
+    const allHitos = getAllHitos();
+    
+    if (testResults.length < allHitos.length) {
+        const currentHito = allHitos[testResults.length];
+        const patientStatus = getPatientDevelopmentStatus(currentHito, currentTest.patientAge);
+        
+        // Información del hito actual
+        let contextHTML = `
+            <div class="current-hito-info">
+                <h5>🎯 Hito actual: ${currentHito.item}</h5>
+                <p><strong>Área:</strong> ${getAreaDisplayName(currentHito.area)}</p>
+                <p><strong>Descripción:</strong> ${currentHito.descripcion}</p>
+                
+                <div class="percentile-info-ref">
+                    <div class="percentile-item">P25: ${currentHito.percentiles.p25}m</div>
+                    <div class="percentile-item">P50: ${currentHito.percentiles.p50}m</div>
+                    <div class="percentile-item">P75: ${currentHito.percentiles.p75}m</div>
+                    <div class="percentile-item">P90: ${currentHito.percentiles.p90}m</div>
+                    <div class="percentile-item patient-position">
+                        Tu paciente (${currentTest.patientAge}m): ${patientStatus.description}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Mostrar otros hitos del área actual
+        const currentArea = currentHito.area;
+        const areaHitos = haizeaData[currentArea];
+        
+        contextHTML += `
+            <div class="area-hitos-ref">
+                <h6>📋 Otros hitos de ${getAreaDisplayName(currentArea)}</h6>
+        `;
+        
+        areaHitos.forEach(hito => {
+            const isCurrentHito = hito.id === currentHito.id;
+            const hitoResult = getHitoResult(hito.id);
+            const status = hitoResult ? hitoResult.result : 'pending';
+            const statusIcon = getStatusIcon(status, isCurrentHito);
+            
+            contextHTML += `
+                <div class="hito-ref-item ${isCurrentHito ? 'current' : ''}">
+                    <div class="hito-ref-title">
+                        ${statusIcon} ${hito.item}
+                    </div>
+                    <div class="hito-ref-percentiles">
+                        <span>P25: ${hito.percentiles.p25}m</span>
+                        <span>P50: ${hito.percentiles.p50}m</span>
+                        <span>P75: ${hito.percentiles.p75}m</span>
+                        <span>P90: ${hito.percentiles.p90}m</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        contextHTML += '</div>';
+        contextContainer.innerHTML = contextHTML;
+    }
+}
+
+// Obtener icono de estado para el panel de referencia
+function getStatusIcon(status, isCurrent) {
+    if (isCurrent) return '🎯';
+    
+    const icons = {
+        'pass': '✅',
+        'partial': '⚠️',
+        'fail': '❌',
+        'pending': '⏳'
+    };
+    return icons[status] || '❔';
 }

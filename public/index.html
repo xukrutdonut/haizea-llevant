@@ -57,6 +57,9 @@
             <div id="test-screen" class="screen">
                 <div class="test-header">
                     <h3 id="current-area">Área de evaluación</h3>
+                    <div class="test-controls">
+                        <button class="btn-info btn-small" onclick="toggleHaizeaReference()">📋 Ver tabla Haizea-Llevant</button>
+                    </div>
                     <div class="progress-bar">
                         <div class="progress" id="progress"></div>
                     </div>
@@ -68,6 +71,20 @@
                         <button class="btn-success" onclick="recordResult('pass')">✓ Superado</button>
                         <button class="btn-warning" onclick="recordResult('partial')">~ Parcial</button>
                         <button class="btn-danger" onclick="recordResult('fail')">✗ No superado</button>
+                    </div>
+                </div>
+
+                <!-- Panel de referencia de Haizea-Llevant (oculto por defecto) -->
+                <div id="haizea-reference-panel" class="reference-panel" style="display: none;">
+                    <div class="reference-header">
+                        <h4>📋 Tabla de Referencia Haizea-Llevant</h4>
+                        <button class="btn-close" onclick="toggleHaizeaReference()">✕</button>
+                    </div>
+                    <div class="reference-content">
+                        <div class="patient-age-ref">
+                            <strong>Edad del paciente: <span id="ref-patient-age">-</span> meses</strong>
+                        </div>
+                        <div id="current-hito-context"></div>
                     </div>
                 </div>
             </div>
@@ -82,6 +99,7 @@
                         <button class="tab-button" onclick="showResultTab('statistics')">📊 Estadísticas</button>
                         <button class="tab-button" onclick="showResultTab('charts')">📈 Gráficos</button>
                         <button class="tab-button" onclick="showResultTab('percentiles')">📉 Percentiles</button>
+                        <button class="tab-button" onclick="showResultTab('haizea-table')">📋 Tabla Haizea-Llevant</button>
                     </div>
 
                     <!-- Contenido de pestañas -->
@@ -121,6 +139,65 @@
                     <div id="percentiles-tab" class="result-tab-content">
                         <h3>📉 Análisis de Percentiles por Hito</h3>
                         <div id="percentiles-table"></div>
+                    </div>
+
+                    <div id="haizea-table-tab" class="result-tab-content">
+                        <h3>📋 Tabla Haizea-Llevant - Posición del Paciente</h3>
+                        <div class="haizea-controls">
+                            <div class="patient-age-indicator">
+                                <span class="age-label">Edad del paciente:</span>
+                                <span class="age-value" id="patient-age-display">-</span>
+                                <span class="age-unit">meses</span>
+                            </div>
+                            <div class="haizea-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color patient-age-marker"></span>
+                                    <span>Edad cronológica del paciente</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color hito-passed"></span>
+                                    <span>Hito superado</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color hito-partial"></span>
+                                    <span>Hito parcial</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color hito-failed"></span>
+                                    <span>Hito no superado</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color hito-not-evaluated"></span>
+                                    <span>No evaluado</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="haizea-summary-stats" id="haizea-summary-stats" style="display: none;">
+                            <div class="summary-card">
+                                <h4>📈 Resumen del desarrollo</h4>
+                                <div class="development-summary">
+                                    <div class="stat-row">
+                                        <span class="stat-label">Hitos esperados para la edad:</span>
+                                        <span class="stat-value" id="expected-hitos">-</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span class="stat-label">Hitos superados:</span>
+                                        <span class="stat-value" id="passed-hitos">-</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span class="stat-label">Desarrollo general:</span>
+                                        <span class="stat-value development-status" id="general-development">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="haizea-table-container">
+                            <div class="haizea-table-wrapper">
+                                <div id="haizea-visual-table"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

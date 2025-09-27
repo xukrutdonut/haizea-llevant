@@ -2,15 +2,25 @@
 
 > **Aplicación web profesional para evaluaciones neurológicas pediátricas con análisis estadístico avanzado basada en datos oficiales de Haizea-Llevant, optimizada para Raspberry Pi 5**
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0-brightgreen.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
 ![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi%205-supported-red.svg)
 ![Statistics](https://img.shields.io/badge/estadísticas-oficiales-green.svg)
+![New](https://img.shields.io/badge/NEW-Tabla%20Visual-red.svg)
 
-## 🆕 **NUEVA VERSIÓN 2.0 - Análisis Estadístico Profesional**
+## 🆕 **NUEVA VERSIÓN 2.1 - Tabla Visual Haizea-Llevant**
 
-### ✨ **Características Avanzadas Implementadas:**
+### ✨ **🎯 NUEVA CARACTERÍSTICA PRINCIPAL: TABLA VISUAL DE HAIZEA-LLEVANT**
+
+#### 📋 **Representación Visual del Niño en la Tabla**
+- **🧒 Posicionamiento del paciente** según edad cronológica
+- **📊 Visualización completa** de percentiles por hito
+- **🎨 Barras coloreadas** que muestran rangos de desarrollo normal
+- **📈 Línea temporal** con la edad del niño marcada claramente
+- **🔍 Panel de referencia** disponible durante la evaluación
+
+#### 🆕 **Características Avanzadas Implementadas en v2.1:**
 
 #### 📊 **Análisis Estadístico Completo**
 - **32 hitos oficiales** de Haizea-Llevant con percentiles P25, P50, P75, P90
@@ -25,10 +35,51 @@
 - **Tabla detallada** de percentiles por cada hito evaluado
 
 #### 🏥 **Dashboard Clínico Profesional**
-- **4 pestañas especializadas**: Resumen, Estadísticas, Gráficos, Percentiles
+- **5 pestañas especializadas**: Resumen, Estadísticas, Gráficos, Percentiles, **🆕 Tabla Haizea-Llevant**
+- **📋 Tabla visual interactiva** con posición del niño por edad cronológica
+- **🎯 Panel de referencia** durante evaluación en tiempo real
+- **📊 Estadísticas de desarrollo** con análisis automático inteligente
+- **🔍 Tooltips informativos** con explicaciones detalladas
 - **Análisis por área** con métricas específicas
 - **Sistema de alertas** codificado por colores
 - **Exportación completa** con análisis estadístico incluido
+
+## 🎯 **Nueva Funcionalidad: Tabla Visual Haizea-Llevant**
+
+### 📊 **Visualización Completa del Desarrollo**
+
+#### 🧒 **Representación del Niño en la Tabla**
+1. **📍 Marcador de Edad Cronológica**
+   - Línea roja vertical que indica la edad actual del paciente
+   - Posicionamiento preciso en cada área de desarrollo
+   - Comparación visual inmediata con percentiles esperados
+
+2. **🎨 Barras de Percentiles Coloreadas**
+   - **Rojo claro (P0-P25)**: Desarrollo temprano/posible retraso
+   - **Amarillo (P25-P50)**: Rango normal bajo
+   - **Verde (P50-P75)**: Rango normal
+   - **Azul (P75-P90)**: Rango normal alto  
+   - **Violeta (P90+)**: Desarrollo avanzado
+
+3. **📈 Timeline Visual por Áreas**
+   - Escala temporal clara en meses
+   - Todos los hitos organizados por área de desarrollo
+   - Estados visuales: ✅ Superado, ⚠️ Parcial, ❌ No superado, ⚪ No evaluado
+
+#### 🎯 **Panel de Referencia Durante la Evaluación**
+- **📱 Acceso flotante** con botón "Ver tabla Haizea-Llevant"
+- **🎯 Contexto del hito actual** con percentiles específicos
+- **📊 Comparación en tiempo real** con la edad del paciente
+- **📋 Vista de área completa** mostrando todos los hitos relacionados
+
+#### 🧠 **Análisis Inteligente del Desarrollo**
+- **🔢 Cálculo automático** de hitos esperados vs. superados
+- **⚡ Evaluación instantánea** del estado general:
+  - 🟢 Desarrollo adecuado
+  - 🟡 Áreas de preocupación
+  - 🔴 Retraso en el desarrollo
+  - 🔵 Desarrollo avanzado
+- **📋 Estadísticas de resumen** contextualizadas
 
 ## 🎯 Áreas de Evaluación Basadas en Datos Oficiales
 
@@ -128,6 +179,15 @@ curl -X POST http://localhost:3000/api/haizea/chart-data \
 - **Codificación por colores** (Normal/Alerta/Avanzado)
 - **Exportación** de datos tabulares
 
+#### 📋 **🆕 5. Tabla Visual Haizea-Llevant**
+- **🧒 Representación del niño** según edad cronológica
+- **📊 Visualización por áreas** de desarrollo completas
+- **🎨 Barras de percentiles** coloreadas e interactivas
+- **📈 Línea temporal** con marcador de edad del paciente
+- **🔍 Tooltips informativos** con contexto detallado
+- **📱 Panel de referencia** accesible durante evaluación
+- **📋 Estadísticas de resumen** del desarrollo general
+
 ## 🏥 **Funcionalidades Clínicas Avanzadas**
 
 ### ⚕️ **Sistema de Alertas Automáticas**
@@ -199,9 +259,11 @@ haizea-llevant/
 - **Generación de alertas** clínicas automáticas
 - **Cálculo de recomendaciones** personalizadas
 
-### 4. 📈 **Dashboard Completo**
-- **4 vistas especializadas** de resultados
-- **Gráficos interactivos** con Chart.js
+### 4. 📈 **Dashboard Completo con Tabla Visual**
+- **5 vistas especializadas** de resultados (incluye nueva tabla visual)
+- **🆕 Tabla Haizea-Llevant** con representación del niño por edad cronológica
+- **📊 Gráficos interactivos** con Chart.js  
+- **🎯 Panel de referencia** durante la evaluación
 - **Exportación completa** con análisis incluido
 - **Impresión optimizada** para informes clínicos
 

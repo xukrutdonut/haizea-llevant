@@ -1,6 +1,6 @@
 {
   "name": "haizea-llevant",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Test de Haizea-Llevant digitalizado con análisis estadístico y gráficos - Aplicación web para evaluación neurológica",
   "main": "server.js",
   "scripts": {
