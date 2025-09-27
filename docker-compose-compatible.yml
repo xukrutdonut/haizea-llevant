@@ -19,10 +19,11 @@ services:
       - PORT=3000
       - TZ=Europe/Madrid
     
-    # Límites de recursos compatibles (evita warnings de cgroups)
+    # Límites de recursos compatibles (sin cgroups v2)
     mem_limit: 512m
     mem_reservation: 256m
     cpus: 2.0
+    cpu_shares: 1024
     
     # Volúmenes para persistir datos
     volumes:
