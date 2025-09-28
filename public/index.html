@@ -21,7 +21,7 @@
                     <span class="stat-value" id="hitos-count">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">% de hitos superados:</span>
+                    <span class="stat-label">% de hitos completados:</span>
                     <span class="stat-value" id="percentil-info">-</span>
                 </div>
             </div>
@@ -117,6 +117,28 @@
                     <div id="statistics-tab" class="result-tab-content">
                         <div id="statistical-analysis">
                             <h3>📈 Análisis Estadístico Detallado</h3>
+                            <div class="stats-overview">
+                                <h4>📊 Resumen General del Desarrollo</h4>
+                                <div class="stats-summary-grid" id="stats-summary-grid"></div>
+                            </div>
+                            
+                            <div class="development-areas-stats">
+                                <h4>🎯 Análisis por Áreas de Desarrollo</h4>
+                                <div class="areas-stats-grid" id="areas-stats-grid"></div>
+                            </div>
+                            
+                            <div class="percentile-distribution">
+                                <h4>📈 Distribución por Percentiles</h4>
+                                <div class="percentile-chart-container">
+                                    <canvas id="percentile-distribution-chart" width="600" height="300"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="developmental-insights">
+                                <h4>💡 Interpretación Clínica</h4>
+                                <div id="clinical-insights"></div>
+                            </div>
+                            
                             <div id="analysis-content"></div>
                         </div>
                     </div>
@@ -139,7 +161,41 @@
                     </div>
 
                     <div id="percentiles-tab" class="result-tab-content">
-                        <h3>📉 Análisis de Percentiles por Hito</h3>
+                        <div class="percentiles-header">
+                            <h3>📉 Análisis de Percentiles por Hito</h3>
+                            <p class="percentiles-intro">
+                                Esta tabla muestra el percentil específico de cada hito evaluado basado en la edad cronológica 
+                                del paciente (<strong id="patient-age-percentiles"></strong> meses) comparado con los datos normativos.
+                            </p>
+                        </div>
+                        
+                        <div class="percentiles-filters">
+                            <div class="filter-group">
+                                <label for="area-filter">Filtrar por área:</label>
+                                <select id="area-filter" onchange="filterPercentilesByArea()">
+                                    <option value="all">Todas las áreas</option>
+                                    <option value="socializacion">Socialización</option>
+                                    <option value="lenguaje">Lenguaje</option>
+                                    <option value="motricidad_gruesa">Motricidad Gruesa</option>
+                                    <option value="motricidad_fina">Motricidad Fina</option>
+                                    <option value="resolucion_problemas">Resolución de Problemas</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="status-filter">Filtrar por resultado:</label>
+                                <select id="status-filter" onchange="filterPercentilesByStatus()">
+                                    <option value="all">Todos los resultados</option>
+                                    <option value="pass">Superados</option>
+                                    <option value="partial">Parciales</option>
+                                    <option value="fail">No superados</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="percentiles-stats-summary">
+                            <div class="percentile-stats-cards" id="percentile-stats-cards"></div>
+                        </div>
+                        
                         <div id="percentiles-table"></div>
                     </div>
 
