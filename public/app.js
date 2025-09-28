@@ -218,7 +218,7 @@ function updateStatsHeader() {
         if (testResults.length > 0) {
             const superados = testResults.filter(r => r.result === 'pass').length;
             const porcentaje = Math.round((superados / testResults.length) * 100);
-            percentilInfo = `${porcentaje}% completado`;
+            percentilInfo = `${porcentaje}%`;
         }
         document.getElementById('percentil-info').textContent = percentilInfo;
     } else {
@@ -427,15 +427,121 @@ function showStatisticalAnalysis() {
 function showLocalStatisticalAnalysis() {
     if (!currentTest || !testResults.length) return;
     
-    // Calcular estadísticas locales
+    generateAdvancedStatistics();
+}
+
+// Función mejorada para generar estadísticas avanzadas
+function generateAdvancedStatistics() {
+    if (!currentTest || !testResults.length) {
+        console.log('No hay datos para generar estadísticas');
+        return;
+    }
+    
+    // 1. Generar resumen estadístico general
+    generateStatsSummary();
+    
+    // 2. Generar análisis por áreas
+    generateAreasAnalysis();
+    
+    // 3. Generar distribución de percentiles
+    generatePercentileDistribution();
+    
+    // 4. Generar insights clínicos
+    generateClinicalInsights();
+    
+    console.log('✅ Análisis estadístico avanzado generado');
+}
+
+// Generar resumen estadístico general
+function generateStatsSummary() {
     const passed = testResults.filter(r => r.result === 'pass').length;
     const partial = testResults.filter(r => r.result === 'partial').length;
     const failed = testResults.filter(r => r.result === 'fail').length;
     const total = testResults.length;
-    
-    // Análisis por área
-    const areaStats = {};
     const allHitos = getAllHitos();
+    
+    // Calcular percentil promedio del paciente
+    const patientAge = currentTest.patientAge;
+    let totalPercentile = 0;
+    let validPercentiles = 0;
+    
+    testResults.forEach(result => {
+        const percentile = calculateHitoPercentile(result, patientAge);
+        if (percentile !== null) {
+            totalPercentile += percentile;
+            validPercentiles++;
+        }
+    });
+    
+    const averagePercentile = validPercentiles > 0 ? Math.round(totalPercentile / validPercentiles) : 0;
+    
+    // Calcular velocidad de desarrollo
+    const developmentSpeed = calculateDevelopmentSpeed();
+    
+    const summaryHtml = `
+        <div class="stats-cards-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <div class="stat-number">${total}</div>
+                    <div class="stat-label">Hitos Evaluados</div>
+                    <div class="stat-detail">de ${allHitos.length} totales</div>
+                </div>
+            </div>
+            
+            <div class="stat-card success">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <div class="stat-number">${passed}</div>
+                    <div class="stat-label">Superados</div>
+                    <div class="stat-detail">${Math.round((passed/total)*100)}% del total</div>
+                </div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-info">
+                    <div class="stat-number">${partial}</div>
+                    <div class="stat-label">Parciales</div>
+                    <div class="stat-detail">${Math.round((partial/total)*100)}% del total</div>
+                </div>
+            </div>
+            
+            <div class="stat-card danger">
+                <div class="stat-icon">❌</div>
+                <div class="stat-info">
+                    <div class="stat-number">${failed}</div>
+                    <div class="stat-label">No Superados</div>
+                    <div class="stat-detail">${Math.round((failed/total)*100)}% del total</div>
+                </div>
+            </div>
+            
+            <div class="stat-card info">
+                <div class="stat-icon">📈</div>
+                <div class="stat-info">
+                    <div class="stat-number">P${averagePercentile}</div>
+                    <div class="stat-label">Percentil Promedio</div>
+                    <div class="stat-detail">${getPercentileInterpretation(averagePercentile)}</div>
+                </div>
+            </div>
+            
+            <div class="stat-card ${developmentSpeed.class}">
+                <div class="stat-icon">${developmentSpeed.icon}</div>
+                <div class="stat-info">
+                    <div class="stat-number">${developmentSpeed.value}</div>
+                    <div class="stat-label">Velocidad</div>
+                    <div class="stat-detail">${developmentSpeed.description}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('stats-summary-grid').innerHTML = summaryHtml;
+}
+
+// Generar análisis por áreas de desarrollo
+function generateAreasAnalysis() {
+    const areaStats = {};
     
     // Inicializar estadísticas por área
     for (let area in haizeaData) {
@@ -445,6 +551,7 @@ function showLocalStatisticalAnalysis() {
             superados: 0,
             parciales: 0,
             fallidos: 0,
+            percentilPromedio: 0,
             estado: 'normal'
         };
     }
@@ -457,140 +564,297 @@ function showLocalStatisticalAnalysis() {
             if (result.result === 'pass') areaStats[area].superados++;
             else if (result.result === 'partial') areaStats[area].parciales++;
             else if (result.result === 'fail') areaStats[area].fallidos++;
+            
+            // Calcular percentil del hito
+            const percentile = calculateHitoPercentile(result, currentTest.patientAge);
+            if (percentile !== null) {
+                areaStats[area].percentilPromedio += percentile;
+            }
         }
     });
     
-    // Determinar estado por área
+    // Finalizar cálculos y determinar estados
+    let areasHtml = '<div class="areas-grid">';
+    
     for (let area in areaStats) {
         const stats = areaStats[area];
         if (stats.evaluados > 0) {
+            stats.percentilPromedio = Math.round(stats.percentilPromedio / stats.evaluados);
             const porcentajeSuperado = (stats.superados / stats.evaluados) * 100;
-            if (porcentajeSuperado < 60) {
-                stats.estado = 'preocupante';
-            } else if (porcentajeSuperado > 90) {
+            
+            // Determinar estado del área
+            if (porcentajeSuperado >= 90) {
                 stats.estado = 'excelente';
-            } else if (porcentajeSuperado > 80) {
-                stats.estado = 'muy bueno';
+            } else if (porcentajeSuperado >= 80) {
+                stats.estado = 'muy-bueno';
+            } else if (porcentajeSuperado >= 70) {
+                stats.estado = 'bueno';
+            } else if (porcentajeSuperado >= 60) {
+                stats.estado = 'regular';
+            } else {
+                stats.estado = 'preocupante';
             }
+            
+            areasHtml += `
+                <div class="area-analysis-card ${stats.estado}">
+                    <div class="area-header">
+                        <h4>${getAreaDisplayName(area)}</h4>
+                        <div class="area-percentile">P${stats.percentilPromedio}</div>
+                    </div>
+                    <div class="area-metrics">
+                        <div class="metric-row">
+                            <span>Evaluados:</span>
+                            <span class="metric-val">${stats.evaluados}/${stats.total}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Superados:</span>
+                            <span class="metric-val">${stats.superados} (${Math.round(porcentajeSuperado)}%)</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Estado:</span>
+                            <span class="area-status ${stats.estado}">${getEstadoText(stats.estado)}</span>
+                        </div>
+                    </div>
+                    <div class="area-progress">
+                        <div class="progress-bar-area">
+                            <div class="progress-fill" style="width: ${porcentajeSuperado}%; background: ${getEstadoColor(stats.estado)};"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     }
     
-    // Análisis de percentiles local
-    let normalCount = 0;
-    let retrasoCount = 0;
-    let avanzadoCount = 0;
+    areasHtml += '</div>';
+    document.getElementById('areas-stats-grid').innerHTML = areasHtml;
+}
+
+// Generar distribución de percentiles con gráfico
+function generatePercentileDistribution() {
+    // Crear gráfico de distribución de percentiles
+    const ctx = document.getElementById('percentile-distribution-chart');
+    if (!ctx) return;
+    
+    const percentileRanges = {
+        'P0-P25': 0,
+        'P25-P50': 0,
+        'P50-P75': 0,
+        'P75-P90': 0,
+        'P90+': 0
+    };
     
     testResults.forEach(result => {
-        const edadPaciente = currentTest.patientAge;
-        const percentiles = result.percentiles;
-        
-        if (edadPaciente < percentiles.p25 && result.result === 'fail') {
-            retrasoCount++;
-        } else if (edadPaciente > percentiles.p90 && result.result === 'pass') {
-            avanzadoCount++;
-        } else {
-            normalCount++;
+        const percentile = calculateHitoPercentile(result, currentTest.patientAge);
+        if (percentile !== null) {
+            if (percentile < 25) percentileRanges['P0-P25']++;
+            else if (percentile < 50) percentileRanges['P25-P50']++;
+            else if (percentile < 75) percentileRanges['P50-P75']++;
+            else if (percentile < 90) percentileRanges['P75-P90']++;
+            else percentileRanges['P90+']++;
         }
     });
     
-    // Generar HTML del análisis local
-    let analysisHtml = `
-        <div class="analysis-grid">
-            <div class="analysis-card">
-                <h4>📊 Distribución General</h4>
-                <div class="metric">
-                    <span>Hitos evaluados:</span>
-                    <span class="metric-value">${total}/${allHitos.length}</span>
-                </div>
-                <div class="metric">
-                    <span>Superados:</span>
-                    <span class="metric-value">${passed} (${Math.round((passed/total)*100)}%)</span>
-                </div>
-                <div class="metric">
-                    <span>Parciales:</span>
-                    <span class="metric-value">${partial} (${Math.round((partial/total)*100)}%)</span>
-                </div>
-                <div class="metric">
-                    <span>No superados:</span>
-                    <span class="metric-value">${failed} (${Math.round((failed/total)*100)}%)</span>
-                </div>
-            </div>
-            
-            <div class="analysis-card">
-                <h4>📈 Análisis de Percentiles</h4>
-                <div class="metric">
-                    <span>Desarrollo normal:</span>
-                    <span class="metric-value">${normalCount}</span>
-                </div>
-                <div class="metric">
-                    <span>Posibles retrasos:</span>
-                    <span class="metric-value">${retrasoCount}</span>
-                </div>
-                <div class="metric">
-                    <span>Desarrollo avanzado:</span>
-                    <span class="metric-value">${avanzadoCount}</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="analysis-grid">
-    `;
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(percentileRanges),
+            datasets: [{
+                data: Object.values(percentileRanges),
+                backgroundColor: [
+                    '#ff6b6b',
+                    '#feca57',
+                    '#48dbfb',
+                    '#0abde3',
+                    '#00d2d3'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Distribución de Hitos por Percentiles'
+                }
+            }
+        }
+    });
+}
+
+// Generar insights clínicos
+function generateClinicalInsights() {
+    const insights = [];
+    const passed = testResults.filter(r => r.result === 'pass').length;
+    const total = testResults.length;
+    const passRate = (passed / total) * 100;
     
-    // Análisis por área
-    for (let area in areaStats) {
-        const stats = areaStats[area];
-        const porcentaje = stats.evaluados > 0 ? Math.round((stats.superados / stats.evaluados) * 100) : 0;
-        
-        analysisHtml += `
-            <div class="analysis-card">
-                <h4>🎯 ${getAreaDisplayName(area)}</h4>
-                <div class="metric">
-                    <span>Evaluados:</span>
-                    <span class="metric-value">${stats.evaluados}/${stats.total}</span>
-                </div>
-                <div class="metric">
-                    <span>Superados:</span>
-                    <span class="metric-value">${stats.superados} (${porcentaje}%)</span>
-                </div>
-                <div class="metric">
-                    <span>Parciales:</span>
-                    <span class="metric-value">${stats.parciales}</span>
-                </div>
-                <div class="metric">
-                    <span>Estado:</span>
-                    <span class="metric-value ${stats.estado}">${stats.estado}</span>
-                </div>
-            </div>
-        `;
-    }
-    
-    analysisHtml += `</div>`;
-    
-    // Recomendaciones locales
-    const recomendaciones = [];
-    if (retrasoCount > 2) {
-        recomendaciones.push('Se recomienda seguimiento especializado debido a posibles retrasos');
-        recomendaciones.push('Considerar estimulación temprana en las áreas afectadas');
-    }
-    if (avanzadoCount > 3) {
-        recomendaciones.push('Desarrollo avanzado - considerar enriquecimiento educativo');
-    }
-    if ((passed / total) < 0.6) {
-        recomendaciones.push('Puntuación general baja - evaluación más detallada recomendada');
-    }
-    
-    if (recomendaciones.length > 0) {
-        analysisHtml += `
-            <div class="recommendations-section">
-                <h4>💡 Recomendaciones</h4>
-        `;
-        recomendaciones.forEach(recomendacion => {
-            analysisHtml += `<div class="recommendation-item">${recomendacion}</div>`;
+    // Análisis general
+    if (passRate >= 90) {
+        insights.push({
+            type: 'positive',
+            title: 'Desarrollo Excelente',
+            content: 'El niño muestra un desarrollo excepcional, superando la gran mayoría de hitos evaluados.'
         });
-        analysisHtml += `</div>`;
+    } else if (passRate >= 80) {
+        insights.push({
+            type: 'good',
+            title: 'Desarrollo Muy Bueno',
+            content: 'El desarrollo es muy satisfactorio con un buen rendimiento general.'
+        });
+    } else if (passRate >= 70) {
+        insights.push({
+            type: 'ok',
+            title: 'Desarrollo Adecuado',
+            content: 'El desarrollo se encuentra dentro de parámetros normales con algunas áreas para fortalecer.'
+        });
+    } else if (passRate >= 60) {
+        insights.push({
+            type: 'warning',
+            title: 'Desarrollo Regular',
+            content: 'Se observan algunas dificultades que requieren atención y seguimiento.'
+        });
+    } else {
+        insights.push({
+            type: 'alert',
+            title: 'Desarrollo con Dificultades',
+            content: 'Se recomienda evaluación especializada y intervención temprana.'
+        });
     }
     
-    document.getElementById('analysis-content').innerHTML = analysisHtml;
+    // Análisis por percentiles
+    const averagePercentile = calculateAveragePercentile();
+    if (averagePercentile < 25) {
+        insights.push({
+            type: 'alert',
+            title: 'Percentil Bajo',
+            content: 'El rendimiento se encuentra por debajo del percentil 25, sugiriendo posible retraso.'
+        });
+    } else if (averagePercentile > 75) {
+        insights.push({
+            type: 'positive',
+            title: 'Percentil Alto',
+            content: 'El rendimiento se encuentra por encima del percentil 75, indicando desarrollo avanzado.'
+        });
+    }
+    
+    let insightsHtml = '<div class="insights-container">';
+    insights.forEach(insight => {
+        insightsHtml += `
+            <div class="insight-card ${insight.type}">
+                <div class="insight-header">
+                    <h5>${insight.title}</h5>
+                </div>
+                <div class="insight-content">
+                    <p>${insight.content}</p>
+                </div>
+            </div>
+        `;
+    });
+    insightsHtml += '</div>';
+    
+    document.getElementById('clinical-insights').innerHTML = insightsHtml;
+}
+
+// Funciones auxiliares para estadísticas
+function calculateHitoPercentile(result, patientAge) {
+    if (!result.percentiles) return null;
+    
+    const p = result.percentiles;
+    if (patientAge <= p.p25) return 25;
+    else if (patientAge <= p.p50) return 50;
+    else if (patientAge <= p.p75) return 75;
+    else if (patientAge <= p.p90) return 90;
+    else return 95;
+}
+
+function calculateDevelopmentSpeed() {
+    // Contar hitos superados antes de tiempo vs tardíos
+    let early = 0;
+    let late = 0;
+    let onTime = 0;
+    
+    testResults.forEach(result => {
+        if (result.result === 'pass') {
+            const percentile = calculateHitoPercentile(result, currentTest.patientAge);
+            if (percentile <= 25) early++;
+            else if (percentile >= 75) late++;
+            else onTime++;
+        }
+    });
+    
+    if (early > late && early > onTime) {
+        return {
+            value: 'Avanzada',
+            class: 'success',
+            icon: '🚀',
+            description: 'Desarrollo precoz'
+        };
+    } else if (late > early && late > onTime) {
+        return {
+            value: 'Lenta',
+            class: 'warning',
+            icon: '🐌',
+            description: 'Desarrollo tardío'
+        };
+    } else {
+        return {
+            value: 'Normal',
+            class: 'info',
+            icon: '⚖️',
+            description: 'Desarrollo típico'
+        };
+    }
+}
+
+function getPercentileInterpretation(percentile) {
+    if (percentile < 25) return 'Por debajo del promedio';
+    else if (percentile < 50) return 'Promedio bajo';
+    else if (percentile < 75) return 'Promedio';
+    else if (percentile < 90) return 'Por encima del promedio';
+    else return 'Muy superior';
+}
+
+function getEstadoText(estado) {
+    const estados = {
+        'excelente': 'Excelente',
+        'muy-bueno': 'Muy Bueno',
+        'bueno': 'Bueno',
+        'regular': 'Regular',
+        'preocupante': 'Preocupante'
+    };
+    return estados[estado] || estado;
+}
+
+function getEstadoColor(estado) {
+    const colores = {
+        'excelente': '#27ae60',
+        'muy-bueno': '#2ecc71',
+        'bueno': '#3498db',
+        'regular': '#f39c12',
+        'preocupante': '#e74c3c'
+    };
+    return colores[estado] || '#95a5a6';
+}
+
+function calculateAveragePercentile() {
+    let totalPercentile = 0;
+    let count = 0;
+    
+    testResults.forEach(result => {
+        const percentile = calculateHitoPercentile(result, currentTest.patientAge);
+        if (percentile !== null) {
+            totalPercentile += percentile;
+            count++;
+        }
+    });
+    
+    return count > 0 ? Math.round(totalPercentile / count) : 50;
 }
 
 // Generar gráfico de desarrollo
@@ -615,7 +879,7 @@ async function generateDevelopmentChart() {
     }
 }
 
-// Crear gráfico con Chart.js
+// Crear gráfico con Chart.js - EJES CORREGIDOS (hitos en Y, edad en X)
 function createChart(chartData) {
     const ctx = document.getElementById('development-chart').getContext('2d');
     
@@ -624,17 +888,17 @@ function createChart(chartData) {
         developmentChart.destroy();
     }
     
-    // Preparar datos para el gráfico
+    // Preparar datos para el gráfico con ejes intercambiados
     const datasets = [];
     
-    // Líneas de percentiles
+    // Líneas de percentiles - INVERTIDOS: edad en X, hitos en Y
     const percentiles = ['p25', 'p50', 'p75', 'p90'];
     const colors = ['#ffc107', '#28a745', '#17a2b8', '#6f42c1'];
     
     percentiles.forEach((p, index) => {
         datasets.push({
             label: `Percentil ${p.toUpperCase().replace('P', '')}`,
-            data: chartData.hitosData.map((hito, i) => ({ x: i, y: hito[p] })),
+            data: chartData.hitosData.map((hito, i) => ({ x: hito[p], y: i })), // INTERCAMBIADO
             borderColor: colors[index],
             backgroundColor: colors[index] + '20',
             fill: false,
@@ -642,10 +906,14 @@ function createChart(chartData) {
         });
     });
     
-    // Línea del paciente
+    // Línea del paciente - vertical
+    const maxY = chartData.hitosData.length - 1;
     datasets.push({
         label: `Paciente (${currentTest.patientAge} meses)`,
-        data: chartData.hitosData.map((hito, i) => ({ x: i, y: currentTest.patientAge })),
+        data: [
+            { x: currentTest.patientAge, y: 0 },
+            { x: currentTest.patientAge, y: maxY }
+        ], // Línea vertical
         borderColor: '#dc3545',
         backgroundColor: '#dc3545',
         borderWidth: 3,
@@ -656,7 +924,7 @@ function createChart(chartData) {
     developmentChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: chartData.hitosData.map(hito => hito.item.substring(0, 20) + '...'),
+            labels: chartData.hitosData.map((hito, index) => `${index + 1}. ${hito.item.substring(0, 25)}...`),
             datasets: datasets
         },
         options: {
@@ -672,18 +940,26 @@ function createChart(chartData) {
                 }
             },
             scales: {
-                y: {
+                x: { // EDAD EN EJE X
                     title: {
                         display: true,
                         text: 'Edad (meses)'
                     },
                     min: 0,
-                    max: 30
+                    max: Math.max(36, currentTest.patientAge + 6) // Ajustar según edad del paciente
                 },
-                x: {
+                y: { // HITOS EN EJE Y
                     title: {
                         display: true,
                         text: 'Hitos del Desarrollo'
+                    },
+                    min: 0,
+                    max: maxY,
+                    ticks: {
+                        callback: function(value, index) {
+                            const hito = chartData.hitosData[value];
+                            return hito ? `${value + 1}. ${hito.item.substring(0, 20)}...` : '';
+                        }
                     }
                 }
             },
@@ -719,36 +995,63 @@ async function updateChart() {
     }
 }
 
-// Generar tabla de percentiles
-function generatePercentilesTable() {
+// Generar tabla de percentiles mejorada con representación ASCII
+function generatePercentilesTableWithASCII() {
     const percentilesContainer = document.getElementById('percentiles-table');
+    const patientAgeDisplay = document.getElementById('patient-age-percentiles');
+    const statsCardsContainer = document.getElementById('percentile-stats-cards');
     
     if (!currentTest || !testResults || testResults.length === 0) {
         percentilesContainer.innerHTML = '<p class="no-data">No hay resultados para mostrar en la tabla de percentiles.</p>';
         return;
     }
     
+    // Mostrar edad del paciente
+    if (patientAgeDisplay) {
+        patientAgeDisplay.textContent = currentTest.patientAge;
+    }
+    
+    // Generar estadísticas de resumen de percentiles
+    generatePercentileStatsCards();
+    
     let tableHtml = `
-        <div class="percentiles-summary">
-            <h4>📊 Análisis de Percentiles por Hito</h4>
-            <p>Esta tabla muestra cómo se compara la edad de tu paciente (${currentTest.patientAge} meses) con los percentiles normales de cada hito evaluado.</p>
-        </div>
-        <table class="percentiles-table">
-            <thead>
-                <tr>
-                    <th>Hito</th>
-                    <th>Área</th>
-                    <th>Resultado</th>
-                    <th>P25</th>
-                    <th>P50</th>
-                    <th>P75</th>
-                    <th>P90</th>
-                    <th>Estado del Paciente</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="percentiles-table-container">
+            <table class="percentiles-table enhanced" id="percentiles-data-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" onclick="sortPercentilesTable('hito')">
+                            Hito Evaluado 
+                            <span class="sort-indicator">↕️</span>
+                        </th>
+                        <th class="sortable" onclick="sortPercentilesTable('area')">
+                            Área de Desarrollo
+                            <span class="sort-indicator">↕️</span>
+                        </th>
+                        <th class="sortable" onclick="sortPercentilesTable('result')">
+                            Resultado
+                            <span class="sort-indicator">↕️</span>
+                        </th>
+                        <th class="percentile-header" title="25% de niños logra este hito a esta edad o antes">P25</th>
+                        <th class="percentile-header" title="50% de niños logra este hito a esta edad o antes">P50</th>
+                        <th class="percentile-header" title="75% de niños logra este hito a esta edad o antes">P75</th>
+                        <th class="percentile-header" title="90% de niños logra este hito a esta edad o antes">P90</th>
+                        <th class="sortable" onclick="sortPercentilesTable('percentile')">
+                            Percentil del Paciente
+                            <span class="sort-indicator">↕️</span>
+                        </th>
+                        <th class="ascii-bar-header">
+                            Representación ASCII
+                        </th>
+                        <th class="sortable" onclick="sortPercentilesTable('interpretation')">
+                            Interpretación Clínica
+                            <span class="sort-indicator">↕️</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="percentiles-table-body">
     `;
     
+    // Generar filas de datos con percentiles calculados
     testResults.forEach((result, index) => {
         const p = result.percentiles;
         const edadPaciente = currentTest.patientAge;
@@ -758,96 +1061,525 @@ function generatePercentilesTable() {
             return;
         }
         
-        let estado = 'normal';
-        let estadoTexto = 'Normal';
-        let estadoDetalle = '';
+        // Calcular percentil específico del paciente para este hito
+        const patientPercentile = calculateHitoPercentile(result, edadPaciente);
+        const interpretation = getDetailedPercentileInterpretation(result, edadPaciente, patientPercentile);
         
-        if (edadPaciente < p.p25) {
-            if (result.result === 'fail') {
-                estado = 'danger';
-                estadoTexto = 'Posible retraso';
-                estadoDetalle = 'No logrado y edad por debajo del P25';
-            } else {
-                estado = 'advanced';
-                estadoTexto = 'Precoz';
-                estadoDetalle = 'Logrado antes del P25';
-            }
-        } else if (edadPaciente >= p.p25 && edadPaciente < p.p50) {
-            estadoTexto = 'Normal bajo';
-            estadoDetalle = 'Entre P25 y P50';
-        } else if (edadPaciente >= p.p50 && edadPaciente < p.p75) {
-            estadoTexto = 'Normal';
-            estadoDetalle = 'Entre P50 y P75';
-        } else if (edadPaciente >= p.p75 && edadPaciente < p.p90) {
-            estadoTexto = 'Normal alto';
-            estadoDetalle = 'Entre P75 y P90';
-        } else if (edadPaciente >= p.p90) {
-            if (result.result === 'pass') {
-                estado = 'advanced';
-                estadoTexto = 'Dentro de rango';
-                estadoDetalle = 'Logrado en edad esperada alta';
-            } else {
-                estado = 'warning';
-                estadoTexto = 'Tardío';
-                estadoDetalle = 'No logrado después del P90';
-            }
-        }
+        // Generar representación ASCII del percentil
+        const asciiBar = generatePercentileASCIIBar(patientPercentile, result.result);
         
         const resultIcon = result.result === 'pass' ? '✅' : result.result === 'partial' ? '⚠️' : '❌';
         const resultText = result.result === 'pass' ? 'Superado' : result.result === 'partial' ? 'Parcial' : 'No superado';
+        const resultClass = result.result === 'pass' ? 'success' : result.result === 'partial' ? 'warning' : 'danger';
         
         tableHtml += `
-            <tr class="hito-row ${estado}">
+            <tr class="hito-row ${interpretation.statusClass}" data-area="${result.area}" data-result="${result.result}">
                 <td class="hito-name" title="${result.hitoItem}">
-                    ${result.hitoItem.length > 40 ? result.hitoItem.substring(0, 37) + '...' : result.hitoItem}
+                    <div class="hito-title">${result.hitoItem.length > 45 ? result.hitoItem.substring(0, 42) + '...' : result.hitoItem}</div>
+                    <div class="hito-id">ID: ${result.hitoId}</div>
                 </td>
-                <td class="area-name">${getAreaDisplayName(result.area)}</td>
-                <td class="result-cell">
-                    <span class="result-icon">${resultIcon}</span>
-                    <span class="result-text">${resultText}</span>
+                <td class="area-name">
+                    <span class="area-badge area-${result.area}">${getAreaDisplayName(result.area)}</span>
                 </td>
-                <td class="percentile-cell">${p.p25}m</td>
-                <td class="percentile-cell">${p.p50}m</td>
-                <td class="percentile-cell">${p.p75}m</td>
-                <td class="percentile-cell">${p.p90}m</td>
-                <td class="status-cell">
-                    <span class="percentil-status ${estado}" title="${estadoDetalle}">
-                        ${estadoTexto}
-                    </span>
+                <td class="result-cell ${resultClass}">
+                    <div class="result-content">
+                        <span class="result-icon">${resultIcon}</span>
+                        <span class="result-text">${resultText}</span>
+                    </div>
+                </td>
+                <td class="percentile-cell">
+                    <span class="percentile-value">${p.p25}m</span>
+                    <div class="percentile-indicator ${edadPaciente <= p.p25 ? 'patient-below' : 'patient-above'}"></div>
+                </td>
+                <td class="percentile-cell">
+                    <span class="percentile-value">${p.p50}m</span>
+                    <div class="percentile-indicator ${edadPaciente <= p.p50 ? 'patient-below' : 'patient-above'}"></div>
+                </td>
+                <td class="percentile-cell">
+                    <span class="percentile-value">${p.p75}m</span>
+                    <div class="percentile-indicator ${edadPaciente <= p.p75 ? 'patient-below' : 'patient-above'}"></div>
+                </td>
+                <td class="percentile-cell">
+                    <span class="percentile-value">${p.p90}m</span>
+                    <div class="percentile-indicator ${edadPaciente <= p.p90 ? 'patient-below' : 'patient-above'}"></div>
+                </td>
+                <td class="patient-percentile-cell">
+                    <div class="percentile-badge p${patientPercentile}">
+                        P${patientPercentile}
+                    </div>
+                    <div class="patient-age-indicator">
+                        Edad: ${edadPaciente}m
+                    </div>
+                </td>
+                <td class="ascii-bar-cell">
+                    <div class="ascii-bar-container">
+                        <div class="ascii-bar-display">
+                            <code>${asciiBar.bar}</code>
+                        </div>
+                        <div class="ascii-bar-legend">
+                            <small>${asciiBar.description}</small>
+                        </div>
+                    </div>
+                </td>
+                <td class="interpretation-cell">
+                    <div class="interpretation-content">
+                        <div class="interpretation-status ${interpretation.statusClass}">
+                            ${interpretation.icon} ${interpretation.status}
+                        </div>
+                        <div class="interpretation-detail" title="${interpretation.detailedExplanation}">
+                            ${interpretation.description}
+                        </div>
+                        ${interpretation.recommendation ? `
+                            <div class="interpretation-recommendation">
+                                💡 ${interpretation.recommendation}
+                            </div>
+                        ` : ''}
+                    </div>
                 </td>
             </tr>
         `;
     });
     
     tableHtml += `
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
         
-        <div class="percentiles-legend">
-            <h5>📖 Interpretación de Estados:</h5>
-            <div class="legend-grid">
-                <div class="legend-item">
-                    <span class="percentil-status advanced">Precoz/Avanzado</span>
-                    <span>Hito logrado antes o después del tiempo esperado de forma positiva</span>
+        <div class="percentiles-enhanced-legend">
+            <h5>📖 Guía de Interpretación de Percentiles:</h5>
+            <div class="ascii-legend">
+                <h6>🎨 Representación ASCII de Percentiles:</h6>
+                <div class="ascii-examples">
+                    <div class="ascii-example">
+                        <code>■■■■■■■■■■ 100%</code> <span>P90+ (Desarrollo avanzado)</span>
+                    </div>
+                    <div class="ascii-example">
+                        <code>■■■■■■■▫▫▫  75%</code> <span>P75 (Desarrollo normal alto)</span>
+                    </div>
+                    <div class="ascii-example">
+                        <code>■■■■■▫▫▫▫▫  50%</code> <span>P50 (Desarrollo típico)</span>
+                    </div>
+                    <div class="ascii-example">
+                        <code>■■▫▫▫▫▫▫▫▫  25%</code> <span>P25 (Desarrollo normal bajo)</span>
+                    </div>
+                    <div class="ascii-example">
+                        <code>■▫▫▫▫▫▫▫▫▫  10%</code> <span>&lt;P25 (Posible retraso)</span>
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <span class="percentil-status normal">Normal</span>
-                    <span>Hito en rango de desarrollo típico</span>
+            </div>
+            
+            <div class="legend-grid-enhanced">
+                <div class="legend-item-enhanced">
+                    <div class="percentile-badge p25">P25</div>
+                    <div class="legend-explanation">
+                        <strong>Percentil 25:</strong> 25% de los niños logran este hito a esta edad o antes
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <span class="percentil-status warning">Tardío</span>
-                    <span>Hito no logrado en el tiempo esperado</span>
+                <div class="legend-item-enhanced">
+                    <div class="percentile-badge p50">P50</div>
+                    <div class="legend-explanation">
+                        <strong>Percentil 50 (Mediana):</strong> 50% de los niños logran este hito a esta edad o antes
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <span class="percentil-status danger">Posible retraso</span>
-                    <span>Requiere atención y posible seguimiento</span>
+                <div class="legend-item-enhanced">
+                    <div class="percentile-badge p75">P75</div>
+                    <div class="legend-explanation">
+                        <strong>Percentil 75:</strong> 75% de los niños logran este hito a esta edad o antes
+                    </div>
+                </div>
+                <div class="legend-item-enhanced">
+                    <div class="percentile-badge p90">P90</div>
+                    <div class="legend-explanation">
+                        <strong>Percentil 90:</strong> 90% de los niños logran este hito a esta edad o antes
+                    </div>
+                </div>
+            </div>
+            
+            <div class="interpretation-legend">
+                <h6>🎯 Estados de Desarrollo:</h6>
+                <div class="status-legend-grid">
+                    <div class="status-legend-item excellent">
+                        <span class="status-icon">🚀</span>
+                        <span>Precoz/Avanzado</span>
+                    </div>
+                    <div class="status-legend-item good">
+                        <span class="status-icon">✅</span>
+                        <span>Normal</span>
+                    </div>
+                    <div class="status-legend-item warning">
+                        <span class="status-icon">⚠️</span>
+                        <span>Tardío</span>
+                    </div>
+                    <div class="status-legend-item danger">
+                        <span class="status-icon">🔴</span>
+                        <span>Posible Retraso</span>
+                    </div>
                 </div>
             </div>
         </div>
     `;
     
     percentilesContainer.innerHTML = tableHtml;
-    console.log('✅ Tabla de percentiles generada con', testResults.length, 'hitos');
+    console.log('✅ Tabla de percentiles con ASCII generada con', testResults.length, 'hitos');
+}
+
+// Función para generar barra ASCII del percentil
+function generatePercentileASCIIBar(percentile, result) {
+    const barLength = 20;
+    const filledLength = Math.round((percentile / 100) * barLength);
+    
+    // Caracteres para la barra según el resultado
+    let filledChar, emptyChar, color;
+    
+    if (result === 'pass') {
+        filledChar = '■'; // Cuadrado lleno verde
+        emptyChar = '▫'; // Cuadrado vacío
+        color = 'success';
+    } else if (result === 'partial') {
+        filledChar = '▬'; // Barra horizontal naranja
+        emptyChar = '▫';
+        color = 'warning';
+    } else {
+        filledChar = '▓'; // Cuadrado medio rojo
+        emptyChar = '░'; // Cuadrado ligero
+        color = 'danger';
+    }
+    
+    const filled = filledChar.repeat(filledLength);
+    const empty = emptyChar.repeat(barLength - filledLength);
+    const bar = filled + empty;
+    
+    // Descripción del nivel
+    let description;
+    if (percentile >= 90) {
+        description = 'Muy superior (>P90)';
+    } else if (percentile >= 75) {
+        description = 'Superior (P75-P90)';
+    } else if (percentile >= 50) {
+        description = 'Normal alto (P50-P75)';
+    } else if (percentile >= 25) {
+        description = 'Normal bajo (P25-P50)';
+    } else {
+        description = 'Por debajo (<P25)';
+    }
+    
+    return {
+        bar: `${bar} ${percentile}%`,
+        description: description,
+        color: color
+    };
+}
+
+// Generar tarjetas de estadísticas de percentiles
+function generatePercentileStatsCards() {
+    const statsContainer = document.getElementById('percentile-stats-cards');
+    if (!statsContainer) return;
+    
+    const percentileStats = {
+        p25Below: 0, // Paciente por debajo de P25
+        p25to50: 0,  // Entre P25 y P50
+        p50to75: 0,  // Entre P50 y P75
+        p75to90: 0,  // Entre P75 y P90
+        p90Above: 0  // Por encima de P90
+    };
+    
+    const interpretationStats = {
+        excellent: 0,
+        good: 0,
+        warning: 0,
+        danger: 0
+    };
+    
+    testResults.forEach(result => {
+        const patientPercentile = calculateHitoPercentile(result, currentTest.patientAge);
+        const interpretation = getDetailedPercentileInterpretation(result, currentTest.patientAge, patientPercentile);
+        
+        // Contar distribución por percentiles
+        if (patientPercentile <= 25) percentileStats.p25Below++;
+        else if (patientPercentile <= 50) percentileStats.p25to50++;
+        else if (patientPercentile <= 75) percentileStats.p50to75++;
+        else if (patientPercentile <= 90) percentileStats.p75to90++;
+        else percentileStats.p90Above++;
+        
+        // Contar interpretaciones
+        interpretationStats[interpretation.statusClass]++;
+    });
+    
+    const total = testResults.length;
+    
+    const statsHtml = `
+        <div class="percentile-stats-grid">
+            <div class="percentile-stat-card p25">
+                <div class="stat-header">
+                    <span class="stat-icon">📉</span>
+                    <span class="stat-title">P0-P25</span>
+                </div>
+                <div class="stat-value">${percentileStats.p25Below}</div>
+                <div class="stat-percentage">${Math.round((percentileStats.p25Below/total)*100)}%</div>
+                <div class="stat-description">Por debajo del percentil 25</div>
+            </div>
+            
+            <div class="percentile-stat-card p50">
+                <div class="stat-header">
+                    <span class="stat-icon">📊</span>
+                    <span class="stat-title">P25-P50</span>
+                </div>
+                <div class="stat-value">${percentileStats.p25to50}</div>
+                <div class="stat-percentage">${Math.round((percentileStats.p25to50/total)*100)}%</div>
+                <div class="stat-description">Desarrollo normal-bajo</div>
+            </div>
+            
+            <div class="percentile-stat-card p75">
+                <div class="stat-header">
+                    <span class="stat-icon">📈</span>
+                    <span class="stat-title">P50-P75</span>
+                </div>
+                <div class="stat-value">${percentileStats.p50to75}</div>
+                <div class="stat-percentage">${Math.round((percentileStats.p50to75/total)*100)}%</div>
+                <div class="stat-description">Desarrollo normal</div>
+            </div>
+            
+            <div class="percentile-stat-card p90">
+                <div class="stat-header">
+                    <span class="stat-icon">🚀</span>
+                    <span class="stat-title">P75+</span>
+                </div>
+                <div class="stat-value">${percentileStats.p75to90 + percentileStats.p90Above}</div>
+                <div class="stat-percentage">${Math.round(((percentileStats.p75to90 + percentileStats.p90Above)/total)*100)}%</div>
+                <div class="stat-description">Desarrollo avanzado</div>
+            </div>
+        </div>
+        
+        <div class="interpretation-summary">
+            <div class="interpretation-stat excellent">
+                <span class="interp-icon">🚀</span>
+                <span class="interp-count">${interpretationStats.excellent}</span>
+                <span class="interp-label">Precoz</span>
+            </div>
+            <div class="interpretation-stat good">
+                <span class="interp-icon">✅</span>
+                <span class="interp-count">${interpretationStats.good}</span>
+                <span class="interp-label">Normal</span>
+            </div>
+            <div class="interpretation-stat warning">
+                <span class="interp-icon">⚠️</span>
+                <span class="interp-count">${interpretationStats.warning}</span>
+                <span class="interp-label">Tardío</span>
+            </div>
+            <div class="interpretation-stat danger">
+                <span class="interp-icon">🔴</span>
+                <span class="interp-count">${interpretationStats.danger}</span>
+                <span class="interp-label">Retraso</span>
+            </div>
+        </div>
+    `;
+    
+    statsContainer.innerHTML = statsHtml;
+}
+
+// Función para interpretación detallada de percentiles
+function getDetailedPercentileInterpretation(result, patientAge, patientPercentile) {
+    const p = result.percentiles;
+    const isPassed = result.result === 'pass';
+    const isPartial = result.result === 'partial';
+    const isFailed = result.result === 'fail';
+    
+    let status, statusClass, icon, description, recommendation, detailedExplanation;
+    
+    if (patientAge < p.p25) {
+        if (isPassed) {
+            status = 'Desarrollo Precoz';
+            statusClass = 'excellent';
+            icon = '🚀';
+            description = 'Hito logrado antes de tiempo';
+            detailedExplanation = `El niño ha superado este hito antes de la edad esperada (P25: ${p.p25}m). Esto indica un desarrollo precoz en esta área.`;
+            recommendation = 'Continuar estimulación';
+        } else if (isFailed) {
+            status = 'Posible Retraso Severo';
+            statusClass = 'danger';
+            icon = '🔴';
+            description = 'No logrado en edad muy temprana';
+            detailedExplanation = `El niño no ha logrado este hito y su edad (${patientAge}m) está muy por debajo de lo esperado (P25: ${p.p25}m).`;
+            recommendation = 'Evaluación especializada urgente';
+        } else {
+            status = 'En Desarrollo Temprano';
+            statusClass = 'warning';
+            icon = '⏳';
+            description = 'Parcial en edad temprana';
+            detailedExplanation = `El hito está parcialmente logrado a una edad temprana (${patientAge}m vs P25: ${p.p25}m).`;
+            recommendation = 'Continuar seguimiento';
+        }
+    } else if (patientAge >= p.p25 && patientAge < p.p50) {
+        if (isPassed) {
+            status = 'Desarrollo Normal-Bajo';
+            statusClass = 'good';
+            icon = '✅';
+            description = 'Logrado en rango normal bajo';
+            detailedExplanation = `Hito logrado dentro del rango normal, en el percentil 25-50 (edad: ${patientAge}m, P25: ${p.p25}m, P50: ${p.p50}m).`;
+        } else if (isFailed) {
+            status = 'Retraso Leve';
+            statusClass = 'warning';
+            icon = '⚠️';
+            description = 'No logrado en rango esperado';
+            detailedExplanation = `El hito no se ha logrado dentro del rango normal esperado.`;
+            recommendation = 'Reforzar estimulación en esta área';
+        }
+    } else if (patientAge >= p.p50 && patientAge < p.p75) {
+        if (isPassed) {
+            status = 'Desarrollo Normal';
+            statusClass = 'good';
+            icon = '✅';
+            description = 'Logrado en edad esperada';
+            detailedExplanation = `Hito logrado en el rango normal típico (P50-P75).`;
+        } else if (isFailed) {
+            status = 'Retraso Moderado';
+            statusClass = 'warning';
+            icon = '⚠️';
+            description = 'No logrado en edad típica';
+            detailedExplanation = `El hito debería estar logrado a esta edad según las normas típicas.`;
+            recommendation = 'Evaluación y estimulación dirigida';
+        }
+    } else if (patientAge >= p.p75 && patientAge < p.p90) {
+        if (isPassed) {
+            status = 'Desarrollo Normal-Alto';
+            statusClass = 'good';
+            icon = '✅';
+            description = 'Logrado en edad adecuada';
+            detailedExplanation = `Hito logrado dentro del percentil 75-90, rango normal alto.`;
+        } else if (isFailed) {
+            status = 'Retraso Significativo';
+            statusClass = 'danger';
+            icon = '🔴';
+            description = 'No logrado a edad tardía';
+            detailedExplanation = `El hito no se ha logrado y la edad del niño (${patientAge}m) supera el percentil 75 (${p.p75}m).`;
+            recommendation = 'Derivación para evaluación especializada';
+        }
+    } else { // >= p.p90
+        if (isPassed) {
+            status = 'Desarrollo Dentro de Rango';
+            statusClass = 'good';
+            icon = '✅';
+            description = 'Logrado en percentil alto';
+            detailedExplanation = `Hito logrado, aunque tardíamente (después del P90: ${p.p90}m).`;
+        } else if (isFailed) {
+            status = 'Retraso Severo';
+            statusClass = 'danger';
+            icon = '🔴';
+            description = 'No logrado después del P90';
+            detailedExplanation = `El hito no se ha logrado y la edad (${patientAge}m) supera ampliamente el percentil 90 (${p.p90}m).`;
+            recommendation = 'Intervención especializada inmediata';
+        }
+    }
+    
+    // Si es parcial, ajustar descripción
+    if (isPartial) {
+        description = description.replace('Logrado', 'Parcialmente logrado');
+        description = description.replace('No logrado', 'Parcialmente logrado');
+        if (!recommendation) {
+            recommendation = 'Continuar trabajo en esta área';
+        }
+    }
+    
+    return {
+        status,
+        statusClass,
+        icon,
+        description,
+        recommendation,
+        detailedExplanation
+    };
+}
+
+// Funciones para filtrar y ordenar la tabla de percentiles
+function filterPercentilesByArea() {
+    const selectedArea = document.getElementById('area-filter').value;
+    const rows = document.querySelectorAll('#percentiles-table-body tr');
+    
+    rows.forEach(row => {
+        const area = row.getAttribute('data-area');
+        if (selectedArea === 'all' || area === selectedArea) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterPercentilesByStatus() {
+    const selectedStatus = document.getElementById('status-filter').value;
+    const rows = document.querySelectorAll('#percentiles-table-body tr');
+    
+    rows.forEach(row => {
+        const result = row.getAttribute('data-result');
+        if (selectedStatus === 'all' || result === selectedStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
+
+function sortPercentilesTable(column) {
+    const tableBody = document.getElementById('percentiles-table-body');
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    
+    // Determinar dirección de ordenamiento
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortDirection = 'asc';
+        currentSortColumn = column;
+    }
+    
+    // Ordenar filas
+    rows.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch (column) {
+            case 'hito':
+                aVal = a.querySelector('.hito-title').textContent.toLowerCase();
+                bVal = b.querySelector('.hito-title').textContent.toLowerCase();
+                break;
+            case 'area':
+                aVal = a.getAttribute('data-area');
+                bVal = b.getAttribute('data-area');
+                break;
+            case 'result':
+                aVal = a.getAttribute('data-result');
+                bVal = b.getAttribute('data-result');
+                break;
+            case 'percentile':
+                aVal = parseInt(a.querySelector('.percentile-badge').textContent.replace('P', ''));
+                bVal = parseInt(b.querySelector('.percentile-badge').textContent.replace('P', ''));
+                break;
+            case 'interpretation':
+                aVal = a.querySelector('.interpretation-status').textContent.toLowerCase();
+                bVal = b.querySelector('.interpretation-status').textContent.toLowerCase();
+                break;
+        }
+        
+        if (typeof aVal === 'string') {
+            return currentSortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        } else {
+            return currentSortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+    });
+    
+    // Reorganizar tabla
+    rows.forEach(row => tableBody.appendChild(row));
+    
+    // Actualizar indicadores de ordenamiento
+    document.querySelectorAll('.sort-indicator').forEach(indicator => {
+        indicator.textContent = '↕️';
+    });
+    
+    const currentHeader = document.querySelector(`th[onclick="sortPercentilesTable('${column}')"] .sort-indicator`);
+    if (currentHeader) {
+        currentHeader.textContent = currentSortDirection === 'asc' ? '↑' : '↓';
+    }
 }
 
 // Gestión de pestañas de resultados
@@ -874,17 +1606,30 @@ function showResultTab(tabName) {
     
     // Generar contenido específico según la pestaña
     if (tabName === 'statistics') {
-        // Asegurar que se muestren las estadísticas
-        if (statisticalAnalysis) {
+        console.log('📊 Cargando pestaña de estadísticas...');
+        // SIEMPRE generar estadísticas avanzadas
+        if (currentTest && testResults && testResults.length > 0) {
+            generateAdvancedStatistics();
+            console.log('✅ Estadísticas avanzadas generadas');
+        } else if (statisticalAnalysis) {
             showStatisticalAnalysis();
+            console.log('✅ Mostrando análisis estadístico del servidor');
         } else {
             showLocalStatisticalAnalysis();
+            console.log('⚠️ Generando análisis estadístico local de respaldo');
+        }
+        // Asegurar que el contenedor de estadísticas esté visible
+        const statsContainer = document.getElementById('statistical-analysis');
+        if (statsContainer) {
+            statsContainer.style.display = 'block';
         }
     } else if (tabName === 'percentiles') {
-        // Asegurar que se muestre la tabla de percentiles
-        generatePercentilesTable();
+        console.log('📈 Cargando pestaña de percentiles...');
+        // Generar tabla con representación ASCII mejorada
+        generatePercentilesTableWithASCII();
     } else if (tabName === 'charts') {
-        // Asegurar que se muestre el gráfico
+        console.log('📊 Cargando pestaña de gráficos...');
+        // Asegurar que se muestre el gráfico con ejes corregidos
         if (currentTest) {
             generateDevelopmentChart();
         }
@@ -896,7 +1641,7 @@ function showResultTab(tabName) {
         generateGraphicChart();
     }
     
-    console.log(`Pestaña '${tabName}' activada`);
+    console.log(`✅ Pestaña '${tabName}' activada y contenido generado`);
 }
 
 // Descargar resultados en PDF (función placeholder)
