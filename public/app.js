@@ -426,7 +426,7 @@ async function generateDevelopmentChart() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 edadMeses: currentTest.patientAge,
-                area: 'all'
+                area: null
             })
         });
         
@@ -459,7 +459,7 @@ function createChart(chartData) {
     percentiles.forEach((p, index) => {
         datasets.push({
             label: `Percentil ${p.toUpperCase().replace('P', '')}`,
-            data: chartData.hitosData.map((hito, i) => ({ x: i, y: hito[p] })),
+            data: chartData.hitosData.map((hito, i) => ({ x: hito[p], y: i })),
             borderColor: colors[index],
             backgroundColor: colors[index] + '20',
             fill: false,
@@ -470,7 +470,7 @@ function createChart(chartData) {
     // Línea del paciente
     datasets.push({
         label: `Paciente (${currentTest.patientAge} meses)`,
-        data: chartData.hitosData.map((hito, i) => ({ x: i, y: currentTest.patientAge })),
+        data: chartData.hitosData.map((hito, i) => ({ x: currentTest.patientAge, y: i })),
         borderColor: '#dc3545',
         backgroundColor: '#dc3545',
         borderWidth: 3,
@@ -481,7 +481,6 @@ function createChart(chartData) {
     developmentChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: chartData.hitosData.map(hito => hito.item.substring(0, 20) + '...'),
             datasets: datasets
         },
         options: {
@@ -497,7 +496,7 @@ function createChart(chartData) {
                 }
             },
             scales: {
-                y: {
+                x: {
                     title: {
                         display: true,
                         text: 'Edad (meses)'
@@ -505,10 +504,18 @@ function createChart(chartData) {
                     min: 0,
                     max: 30
                 },
-                x: {
+                y: {
                     title: {
                         display: true,
                         text: 'Hitos del Desarrollo'
+                    },
+                    ticks: {
+                        callback: function(value, index) {
+                            if (chartData.hitosData && chartData.hitosData[value]) {
+                                return chartData.hitosData[value].item.substring(0, 15) + '...';
+                            }
+                            return value;
+                        }
                     }
                 }
             },
